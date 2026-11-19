@@ -6,6 +6,6 @@
 
     My program will adress this problem by:
 
-        -   providing users with a working typing test
-        -   returning a score measured in words per minute (wpm)
-        -   returning a percentage indicating the percentage of people who got score lower than them
+        -   providing users with a working typing test (R1)
+        -   returning a score measured in words per minute (wpm) (R1)
+        -   returning a percentage indicating the percentage of people who got score lower than them (R1)
