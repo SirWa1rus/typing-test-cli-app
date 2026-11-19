@@ -44,6 +44,16 @@ python -m unittest discover tests -v   # run the logic tests
 winpty python main.py               # play
 ```
 
+## How to run (macOS / Linux)
+
+`curses` ships with Python on macOS and Linux. Skip the pip install and `winpty`.
+
+```bash
+cd typing-test-cli-app
+python3 -m unittest discover tests -v   # run the logic tests
+python3 main.py                         # play
+```
+
 ## Possible next steps
 
 - Difficulty levels (the spec only defines "easy").
