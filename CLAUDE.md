@@ -1,14 +1,16 @@
 # Rules for project:
 
-    1.  Ask permission for any git commands
+    1.  The user does all git commits. Never commit, undo, or amend a commit; list the changed files instead.
     2.  Develop in python
     3.  Provide steps for running the program in git bash on windows (and in what order they should be run)
-    4.  Here is what each file is for:
-            -   arch.md: a handoff file to pass to other agents to read and build off of
+    4.  Some important files:
+
             -   history.md: a history of all chat messages between the user and the agent
             -   spec.md: program description + list of features
-    5.  Do not read these files:
-            -   problem.md
-    6.  Update the arch.md file with any updates/changes in this project
-    7.  Build only tests for the project's logic
-    8.  Interview the user for any missing information from the spec.md or arch.md files during program development.
+
+    5.  Handoff files are named arch-round-<#>.md. Write one only when the user asks. At the start of a round, read the newest one (it replaces arch.md as the current handoff).
+    6.  Build only tests for the project's logic
+    7.  Interview the user for any missing information from the spec.md file during program development.
+    8.  Name every test after the round tag of the requirement it checks, from problem.md: test_R1_..., test_R2_..., and so on.
+    9.  Record design decisions that had real alternatives in decisions/ as Y-statements, in files numbered 0001-..., 0002-..., and so on.
+    10. Keep logic.py free of curses/UI code so it stays fully unit-testable; main.py is UI only.
