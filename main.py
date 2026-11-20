@@ -48,7 +48,79 @@ def centered(win, row, text, attr=0):
     safe_addstr(win, row, max(0, (cols - len(text)) // 2), text, attr)
 
 
+def option_row(options, selected):
+    """Draw a horizontal menu like:   Retry   [ Menu ]   Quit"""
+    return "   ".join(f"[ {o} ]" if i == selected else f"  {o}  " for i, o in enumerate(options))
+
+
 # --- Screens ---------------------------------------------------------------------
+
+def main_menu(stdscr):
+    """Standard/Custom choice. Returns "standard", "custom", or None for Esc."""
+    stdscr.timeout(-1)
+    options = ["Standard typing test", "Custom typing test"]
+    selected = 0
+    while True:
+        stdscr.erase()
+        rows, _ = stdscr.getmaxyx()
+        mid = rows // 2
+        centered(stdscr, mid - 3, "Typing Test", curses.A_BOLD)
+        for i, option in enumerate(options):
+            label = f"{i + 1}. {option}"
+            attr = curses.A_REVERSE if i == selected else curses.A_NORMAL
+            centered(stdscr, mid - 1 + i, f" {label} ", attr)
+        centered(stdscr, rows - 1, "Arrows: move   Enter: select   Esc: quit", curses.A_DIM)
+        stdscr.refresh()
+
+        key = stdscr.getch()
+        if key == KEY_ESC:
+            return None
+        if key in (curses.KEY_LEFT, curses.KEY_UP):
+            selected = max(0, selected - 1)
+        elif key in (curses.KEY_RIGHT, curses.KEY_DOWN):
+            selected = min(len(options) - 1, selected + 1)
+        elif key in (ord("1"), ord("2")):
+            selected = key - ord("1")
+        elif key in ENTER_KEYS:
+            return ["standard", "custom"][selected]
+
+
+def ask_custom_text(stdscr):
+    """Let the user type a path to a .txt file until it loads.
+
+    Returns the cleaned test text, or None if Esc was pressed (back to menu).
+    """
+    stdscr.timeout(-1)
+    path = ""
+    error = ""
+    while True:
+        stdscr.erase()
+        rows, cols = stdscr.getmaxyx()
+        safe_addstr(stdscr, 0, LEFT_MARGIN, "Custom Typing Test", curses.A_BOLD)
+        safe_addstr(stdscr, 2, LEFT_MARGIN, "Path to a .txt file "
+                    f"({logic.MIN_CUSTOM_CHARS}-{logic.MAX_CUSTOM_CHARS} characters):")
+        # Show the end of long paths so the part being typed stays visible.
+        visible = path[-(cols - 2 * LEFT_MARGIN - 3):] if cols > 2 * LEFT_MARGIN + 3 else ""
+        safe_addstr(stdscr, 4, LEFT_MARGIN, "> " + visible)
+        safe_addstr(stdscr, 4, LEFT_MARGIN + 2 + len(visible), " ", curses.A_REVERSE)  # fake cursor
+        if error:
+            safe_addstr(stdscr, 6, LEFT_MARGIN, error, curses.color_pair(RED))
+        centered(stdscr, rows - 1, "Enter: start   Esc: back to menu", curses.A_DIM)
+        stdscr.refresh()
+
+        key = stdscr.getch()
+        if key == KEY_ESC:
+            return None
+        if key in ENTER_KEYS:
+            try:
+                return logic.load_custom_text(path)
+            except logic.CustomTextError as e:
+                error = str(e)
+        elif key in BACKSPACE_KEYS:
+            path = path[:-1]
+        elif 32 <= key <= 126:
+            path += chr(key)
+
 
 def countdown(stdscr):
     """Show 5..1 before the test. Returns False if the user pressed Esc."""
@@ -92,9 +164,9 @@ def draw_test(stdscr, test, seconds_left):
     stdscr.refresh()
 
 
-def run_test(stdscr):
-    """Run one 45-second test. Returns (wpm, percent) or None if Esc was pressed."""
-    test = logic.TypingTest(logic.generate_text())
+def run_test(stdscr, text):
+    """Run one 45-second test on `text`. Returns (wpm, percent) or None if Esc was pressed."""
+    test = logic.TypingTest(text)
     stdscr.timeout(100)  # wake up every 100 ms to update the timer
     start = time.monotonic()
     while True:
@@ -115,10 +187,10 @@ def run_test(stdscr):
 
 
 def show_results(stdscr, wpm, percent):
-    """Show the score with a Retry/Quit menu. Returns "retry" or "quit"."""
+    """Show the score with a Retry/Menu/Quit menu. Returns "retry", "menu", or "quit"."""
     curses.flushinp()  # throw away keys typed as time ran out
     stdscr.timeout(-1)  # wait for keys normally again
-    options = ["Retry", "Quit"]
+    options = ["Retry", "Menu", "Quit"]
     selected = 0
     while True:
         stdscr.erase()
@@ -126,8 +198,7 @@ def show_results(stdscr, wpm, percent):
         mid = rows // 2
         centered(stdscr, mid - 3, f"{wpm:.0f} WPM", curses.A_BOLD)
         centered(stdscr, mid - 1, f"You typed faster than {percent:.0f}% of people")
-        menu = "   ".join(f"[ {o} ]" if i == selected else f"  {o}  " for i, o in enumerate(options))
-        centered(stdscr, mid + 2, menu)
+        centered(stdscr, mid + 2, option_row(options, selected))
         centered(stdscr, rows - 1, "Left/Right: move   Enter: select   Esc: quit", curses.A_DIM)
         stdscr.refresh()
 
@@ -149,14 +220,27 @@ def app(stdscr):
         pass
     init_colors()
     stdscr.keypad(True)  # turn arrow keys into curses.KEY_LEFT etc.
-    while True:
-        if not countdown(stdscr):
+    while True:  # main menu loop
+        mode = main_menu(stdscr)
+        if mode is None:
             return
-        result = run_test(stdscr)
-        if result is None:
-            return
-        if show_results(stdscr, *result) == "quit":
-            return
+        custom_text = None
+        if mode == "custom":
+            custom_text = ask_custom_text(stdscr)
+            if custom_text is None:
+                continue  # Esc: back to the main menu
+        while True:  # Retry loop: same mode (and same custom text) each time
+            if not countdown(stdscr):
+                return
+            text = custom_text if custom_text is not None else logic.generate_text()
+            result = run_test(stdscr, text)
+            if result is None:
+                return
+            choice = show_results(stdscr, *result)
+            if choice == "quit":
+                return
+            if choice == "menu":
+                break
 
 
 if __name__ == "__main__":
