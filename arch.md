@@ -9,11 +9,11 @@ v1 implemented (2026-11-19): every feature in `spec.md` is built, and the logic 
 
 ## Files
 
-| File | Purpose |
-|---|---|
-| `logic.py` | Pure logic, with no curses import. It holds the settings constants, the easy word list, `generate_text()`, the `TypingTest` class (typed chars, per-char status, backspace, finished), `calculate_wpm()`, `percent_beaten()`, and `wrap_positions()` (maps each char to a (row, col) for display). |
-| `main.py` | The curses UI. It runs the countdown screen, then the test screen, then the results screen (Retry/Quit menu). The loop is `app()`. |
-| `tests/test_logic.py` | `unittest` tests for `logic.py` only. Per the project rules, we test logic only, not UI. |
+| File                  | Purpose                                                                                                                                                                                                                                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `logic.py`            | Pure logic, with no curses import. It holds the settings constants, the easy word list, `generate_text()`, the `TypingTest` class (typed chars, per-char status, backspace, finished), `calculate_wpm()`, `percent_beaten()`, and `wrap_positions()` (maps each char to a (row, col) for display). |
+| `main.py`             | The curses UI. It runs the countdown screen, then the test screen, then the results screen (Retry/Quit menu). The loop is `app()`.                                                                                                                                                                 |
+| `tests/test_logic.py` | `unittest` tests for `logic.py` only. Per the project rules, we test logic only, not UI.                                                                                                                                                                                                           |
 
 ## Flow
 
