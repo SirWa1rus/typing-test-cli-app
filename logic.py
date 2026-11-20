@@ -4,6 +4,7 @@ Keeping this separate from main.py (the curses UI) means every function here
 can be tested with plain unit tests, without opening a terminal window.
 """
 
+import os
 import random
 from statistics import NormalDist
 
@@ -20,6 +21,10 @@ WPM_SPREAD = 12         # standard deviation of the bell curve
 
 # A standard "word" in WPM calculations is 5 characters (spaces included).
 CHARS_PER_WORD = 5
+
+# Limits for a custom .txt test (counted after the text is cleaned up).
+MIN_CUSTOM_CHARS = 40
+MAX_CUSTOM_CHARS = 400
 
 # Short, common words for an "easy" test.
 EASY_WORDS = [
@@ -54,6 +59,76 @@ def generate_text(word_count=WORDS_PER_TEST, rng=None):
     """
     rng = rng or random.Random()
     return " ".join(rng.choice(EASY_WORDS) for _ in range(word_count))
+
+
+# --- Custom test text (from a .txt file) ------------------------------------------
+
+class CustomTextError(Exception):
+    """Raised when a custom .txt file can't be used. str(error) is shown to the user."""
+
+
+def clean_path_input(raw):
+    """Tidy a path the user typed: trim spaces and one pair of surrounding quotes.
+
+    Windows "Copy as path" wraps paths in double quotes, so we accept that.
+    """
+    path = raw.strip()
+    if len(path) >= 2 and path[0] == path[-1] and path[0] in "\"'":
+        path = path[1:-1].strip()
+    return path
+
+
+def normalize_custom_text(raw):
+    """Turn line breaks and tabs into spaces, collapse repeated spaces, trim the ends."""
+    return " ".join(raw.split())
+
+
+def is_keyboard_char(ch):
+    """True for characters on a standard US keyboard: printable ASCII (space to ~)."""
+    return " " <= ch <= "~"
+
+
+def validate_custom_text(text):
+    """Return an error message if `text` can't be a test, or None if it's fine.
+
+    `text` should already be normalized.
+    """
+    bad = sorted({ch for ch in text if not is_keyboard_char(ch)})
+    if bad:
+        shown = " ".join(repr(ch) for ch in bad[:5])
+        return f"File has characters not on a standard keyboard: {shown}"
+    if not MIN_CUSTOM_CHARS <= len(text) <= MAX_CUSTOM_CHARS:
+        return (f"File has {len(text)} characters; it needs "
+                f"{MIN_CUSTOM_CHARS}-{MAX_CUSTOM_CHARS}.")
+    return None
+
+
+def load_custom_text(raw_path):
+    """Read, clean, and check a custom .txt file. Returns the test text.
+
+    Raises CustomTextError with a user-friendly message if anything is wrong.
+    A relative path is looked up from the folder the program was run in.
+    """
+    path = clean_path_input(raw_path)
+    if not path:
+        raise CustomTextError("Please type a path to a .txt file.")
+    if not path.lower().endswith(".txt"):
+        raise CustomTextError("The file must end in .txt")
+    if not os.path.isfile(path):
+        raise CustomTextError(f"No file found at: {path}")
+    try:
+        # utf-8-sig also strips the invisible "BOM" marker Notepad may add.
+        with open(path, encoding="utf-8-sig") as f:
+            raw = f.read()
+    except UnicodeDecodeError:
+        raise CustomTextError("The file isn't plain text (couldn't read it as UTF-8).")
+    except OSError as e:
+        raise CustomTextError(f"Couldn't open the file: {e.strerror}")
+    text = normalize_custom_text(raw)
+    error = validate_custom_text(text)
+    if error:
+        raise CustomTextError(error)
+    return text
 
 
 # --- Typing state ---------------------------------------------------------------
