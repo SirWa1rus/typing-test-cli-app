@@ -56,6 +56,4 @@ python3 main.py                         # play
 
 ## Possible next steps
 
-- Difficulty levels (the spec only defines "easy").
-- Save a score history, and show a personal best.
-- Show accuracy % on the results screen.
+- allow the user to run custom typing tests
