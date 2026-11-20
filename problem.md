@@ -6,8 +6,18 @@
 
     My program will address this problem by:
 
-        -   providing users with a working typing test (R1)
-        -   returning a score measured in words per minute (wpm) (R1)
-        -   returning a percentage indicating the percentage of people who got score lower than them (R1)
-        -   inputting a .txt file in order to create a custom typing test (R2)
-        -   increasing the difficulty of the standard typing test (R3)
+        -   providing users with a working typing test
+        -   returning a score measured in words per minute (wpm)
+        -   returning a percentage indicating the percentage of people who got score lower than them
+
+# Round 1 requirements
+
+    These are from the initial requirements (v1 of the entire project) above:
+
+    -   providing users with a working typing test (R1.1)
+    -   returning a score measured in words per minute (wpm) (R1.2)
+    -   returning a percentage indicating the percentage of people who got score lower than them (R1.3)
+
+# Round 2 requirements
+
+    -   inputting a .txt file in order to create a custom typing test (R2.1)
