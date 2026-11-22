@@ -26,6 +26,16 @@ CHARS_PER_WORD = 5
 MIN_CUSTOM_CHARS = 40
 MAX_CUSTOM_CHARS = 400
 
+# Typing test screen layout (R4).
+TEXT_MAX_WIDTH = 60     # longest line of test text, in columns
+SIDE_MARGIN = 2         # empty columns kept at the left and right screen edges
+TEXT_TOP = 3            # first screen row the text may use (rows 0-2: title and timer)
+
+# A terminal program can't change the terminal's font, so we tell the user how
+# to zoom instead (works in Git Bash/mintty and Windows Terminal) (R4.1).
+ZOOM_TIP = "Tip: hold Ctrl and scroll the mouse wheel (or press Ctrl+= / Ctrl+-) to make the text bigger"
+ZOOM_TIP_SHORT = "Ctrl+scroll: bigger text"
+
 # Short, common words for an "easy" test.
 EASY_WORDS = [
     "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
@@ -294,3 +304,34 @@ def wrap_positions(text, width):
             positions.append((row, col))
             col += 1
     return positions
+
+
+# --- Screen layout (R4) --------------------------------------------------------
+
+def zoom_tip(width):
+    """The zoom tip that fits in `width` columns: the full one, a short one, or ""."""
+    for tip in (ZOOM_TIP, ZOOM_TIP_SHORT):
+        if len(tip) <= width:
+            return tip
+    return ""
+
+
+def centered_positions(text, screen_cols, screen_rows):
+    """Where to draw each character of `text` so the text sits in the middle.
+
+    The text is wrapped into lines at most TEXT_MAX_WIDTH wide (less on a
+    narrow screen, keeping SIDE_MARGIN free on each side). The lines keep a
+    straight left edge, and that whole block is centered left-to-right and
+    top-to-bottom, but never starts above row TEXT_TOP (the title and timer).
+
+    Returns one (screen_row, screen_col) pair per character of `text`.
+    """
+    width = min(TEXT_MAX_WIDTH, screen_cols - 2 * SIDE_MARGIN)
+    positions = wrap_positions(text, width)
+    if not positions:
+        return []
+    block_width = max(col for _, col in positions) + 1
+    block_height = positions[-1][0] + 1
+    left = max(0, (screen_cols - block_width) // 2)
+    top = max(TEXT_TOP, (screen_rows - block_height) // 2)
+    return [(top + row, left + col) for row, col in positions]
