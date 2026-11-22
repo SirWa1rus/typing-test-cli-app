@@ -30,3 +30,7 @@
 
     -   increase the font size in the typing tests (R4.1)
     -   make sure the typing test text is nice and center (|-++-|, where the text should be where the "++" signs are and the "| |" are the edges of the tui) (R4.2)
+
+# Round 5 requirements
+
+    -   white box behind all selectable buttons to indicate the option I am currently hovering over (R5.1)
