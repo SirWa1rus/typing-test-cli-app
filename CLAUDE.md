@@ -14,3 +14,7 @@
     8.  Every test name starts with the unique ID of the requirement it checks, as tagged in problem.md: R<round>.<n> (e.g. R2.1 = Round 2, bullet 1). Python names can't contain dots, so R2.1 is written test_R2_1_...
     9.  Record design decisions that had real alternatives in decisions/ as Y-statements, in files numbered 0001-..., 0002-..., and so on.
     10. Keep logic.py free of curses/UI code so it stays fully unit-testable; main.py is UI only.
+    11. Read-only git commands (git status, git log, git diff) are fine without asking. Never stage files (git add) either; that is part of committing.
+    12. Use Git Bash syntax, not PowerShell. The project path contains spaces (OneDrive - DePaul University/...), so always quote it.
+    13. On Windows the curses UI needs `pip install windows-curses` (once) and must be started as `winpty python main.py` in Git Bash; without winpty it fails with a "Redirection is not supported" style error.
+    14. At the end of each session, append a short dated entry to history.md (the user's requests, the questions asked and answers given, and what changed).
