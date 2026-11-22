@@ -44,6 +44,54 @@ EASY_WORDS = [
     "help", "hand", "small", "end", "play", "run", "move", "live", "place", "read",
 ]
 
+# Longer, less common words for a "medium" test (all lowercase, no punctuation).
+MEDIUM_WORDS = [
+    "garden", "however", "simple", "travel", "number", "always", "letter", "answer", "change", "follow",
+    "around", "family", "mother", "father", "school", "friend", "animal", "picture", "country", "between",
+    "during", "before", "minute", "window", "market", "summer", "winter", "spring", "autumn", "yellow",
+    "purple", "orange", "silver", "bright", "quiet", "gentle", "strong", "weather", "forest", "island",
+    "river", "ocean", "valley", "bridge", "castle", "doctor", "farmer", "artist", "driver", "player",
+    "kitchen", "bottle", "basket", "pocket", "button", "candle", "carpet", "ticket", "jacket", "blanket",
+    "morning", "evening", "history", "general", "certain", "several", "perhaps", "almost", "already", "enough",
+    "because", "believe", "develop", "explain", "imagine", "improve", "include", "measure", "prepare", "receive",
+    "system", "problem", "program", "service", "subject", "student", "teacher", "company", "control", "nothing",
+]
+
+# Long words for a "hard" test. Hard text also adds capitals, punctuation, and numbers.
+HARD_WORDS = [
+    "knowledge", "different", "beautiful", "important", "especially",
+    "government", "experience", "particular", "understand", "community",
+    "development", "environment", "information", "technology", "international",
+    "relationship", "opportunity", "performance", "political", "population",
+    "professional", "significant", "traditional", "university", "yesterday",
+    "absolutely", "according", "actually", "agreement", "apartment",
+    "attention", "available", "background", "boundary", "calculate",
+    "challenge", "character", "chocolate", "collection", "comfortable",
+    "committee", "completely", "condition", "conference", "consider",
+    "continue", "contract", "creative", "critical", "currently",
+    "dangerous", "decision", "definitely", "democracy", "describe",
+    "discovery", "discussion", "education", "electricity", "emergency",
+    "encourage", "equipment", "establish", "evidence", "exercise",
+    "exchange", "existence", "expensive", "familiar", "favorite",
+    "frequently", "generation", "happiness", "hospital", "identity",
+    "immediately", "increase", "independent", "individual", "industry",
+    "interesting", "investment", "language", "literature", "magazine",
+    "maintain", "marriage", "material", "medicine", "mountain",
+    "necessary", "neighbor", "obviously", "operation", "ordinary",
+    "organize", "original", "otherwise", "pleasant", "possible",
+]
+
+# Difficulty levels for the standard test, in the order the menu shows them.
+EASY = "easy"
+MEDIUM = "medium"
+HARD = "hard"
+DIFFICULTIES = (EASY, MEDIUM, HARD)
+
+# How often hard text adds extras (each is a chance per word, from 0 to 1).
+HARD_NUMBER_CHANCE = 0.10     # a word is replaced by a number from 0 to 999
+HARD_SENTENCE_CHANCE = 0.15   # a word ends a sentence with . ? or !
+HARD_COMMA_CHANCE = 0.15      # a word is followed by a comma
+
 # Character states returned by TypingTest.status()
 UNTYPED = "untyped"
 CORRECT = "correct"
@@ -52,13 +100,47 @@ INCORRECT = "incorrect"
 
 # --- Test text ----------------------------------------------------------------
 
-def generate_text(word_count=WORDS_PER_TEST, rng=None):
-    """Return `word_count` random easy words joined by single spaces.
+def generate_text(word_count=WORDS_PER_TEST, rng=None, difficulty=EASY):
+    """Return `word_count` random words for `difficulty`, joined by single spaces.
 
-    `rng` lets tests pass a seeded random.Random so the output is predictable.
+    easy and medium are plain lowercase words; hard is turned into sentences
+    (see _hard_text). `rng` lets tests pass a seeded random.Random so the
+    output is predictable. An unknown difficulty raises ValueError.
     """
     rng = rng or random.Random()
-    return " ".join(rng.choice(EASY_WORDS) for _ in range(word_count))
+    if difficulty == EASY:
+        return " ".join(rng.choice(EASY_WORDS) for _ in range(word_count))
+    if difficulty == MEDIUM:
+        return " ".join(rng.choice(MEDIUM_WORDS) for _ in range(word_count))
+    if difficulty == HARD:
+        return _hard_text(word_count, rng)
+    raise ValueError(f"Unknown difficulty: {difficulty!r}")
+
+
+def _hard_text(word_count, rng):
+    """Random HARD_WORDS made to look like sentences.
+
+    Each sentence starts with a capital letter and ends with . ? or !, some
+    words get a comma after them, and some words are swapped for numbers.
+    The last word always ends the final sentence.
+    """
+    tokens = []
+    new_sentence = True
+    for i in range(word_count):
+        if rng.random() < HARD_NUMBER_CHANCE:
+            token = str(rng.randint(0, 999))
+        else:
+            token = rng.choice(HARD_WORDS)
+            if new_sentence:
+                token = token.capitalize()
+        is_last = i == word_count - 1
+        new_sentence = is_last or rng.random() < HARD_SENTENCE_CHANCE
+        if new_sentence:
+            token += rng.choice(".?!")
+        elif rng.random() < HARD_COMMA_CHANCE:
+            token += ","
+        tokens.append(token)
+    return " ".join(tokens)
 
 
 # --- Custom test text (from a .txt file) ------------------------------------------
