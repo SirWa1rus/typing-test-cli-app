@@ -42,4 +42,5 @@ This was the agent's decision, made to fix the green fire the user reported.
 ## Where it lives
 
 `main.animation_colors()`, `main.init_animation_colors()`. The R5.1 white box
-uses color 15, which is bright white in both orders, so it was not affected.
+used color 15, which is bright white in both orders, so it was not affected;
+R6.2 later removed the white box (see 0013).
