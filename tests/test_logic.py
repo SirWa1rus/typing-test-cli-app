@@ -250,5 +250,114 @@ class LoadCustomTextTests(unittest.TestCase):
         self.assertEqual(t.correct_count(), len(VALID_TEXT))
 
 
+# --- R3.1: medium and hard difficulty for the standard typing test --------------------
+
+SENTENCE_ENDS = ".?!"
+
+
+def bare_word(token):
+    """A token with its punctuation removed and lowercased: 'Whether,' -> 'whether'."""
+    return token.rstrip(",.?!").lower()
+
+
+class DifficultyTests(unittest.TestCase):
+    def test_R3_1_three_difficulties_in_order(self):
+        self.assertEqual(logic.DIFFICULTIES, (logic.EASY, logic.MEDIUM, logic.HARD))
+
+    def test_R3_1_default_is_easy(self):
+        # Round 1 callers pass no difficulty and must still get easy text.
+        self.assertEqual(logic.generate_text(30, random.Random(5)),
+                         logic.generate_text(30, random.Random(5), logic.EASY))
+
+    def test_R3_1_unknown_difficulty_rejected(self):
+        with self.assertRaises(ValueError):
+            logic.generate_text(10, random.Random(1), "impossible")
+
+    def test_R3_1_word_count_every_difficulty(self):
+        for difficulty in logic.DIFFICULTIES:
+            with self.subTest(difficulty=difficulty):
+                text = logic.generate_text(25, random.Random(7), difficulty)
+                self.assertEqual(len(text.split(" ")), 25)
+
+    def test_R3_1_only_keyboard_characters_every_difficulty(self):
+        for difficulty in logic.DIFFICULTIES:
+            with self.subTest(difficulty=difficulty):
+                text = logic.generate_text(60, random.Random(8), difficulty)
+                self.assertTrue(all(logic.is_keyboard_char(ch) for ch in text))
+
+    def test_R3_1_same_seed_same_text_every_difficulty(self):
+        for difficulty in logic.DIFFICULTIES:
+            with self.subTest(difficulty=difficulty):
+                a = logic.generate_text(20, random.Random(9), difficulty)
+                b = logic.generate_text(20, random.Random(9), difficulty)
+                self.assertEqual(a, b)
+
+    def test_R3_1_word_lists_get_longer_with_difficulty(self):
+        def average(words):
+            return sum(map(len, words)) / len(words)
+        self.assertLess(average(logic.EASY_WORDS), average(logic.MEDIUM_WORDS))
+        self.assertLess(average(logic.MEDIUM_WORDS), average(logic.HARD_WORDS))
+
+    def test_R3_1_word_lists_have_no_duplicates_or_overlap(self):
+        easy, medium, hard = map(set, (logic.EASY_WORDS, logic.MEDIUM_WORDS, logic.HARD_WORDS))
+        self.assertEqual(len(medium), len(logic.MEDIUM_WORDS))
+        self.assertEqual(len(hard), len(logic.HARD_WORDS))
+        self.assertFalse(easy & medium)
+        self.assertFalse(medium & hard)
+        self.assertFalse(easy & hard)
+
+
+class MediumTextTests(unittest.TestCase):
+    def setUp(self):
+        self.words = logic.generate_text(60, random.Random(10), logic.MEDIUM).split(" ")
+
+    def test_R3_1_medium_uses_only_medium_words(self):
+        for word in self.words:
+            self.assertIn(word, logic.MEDIUM_WORDS)
+
+    def test_R3_1_medium_is_plain_lowercase(self):
+        for word in self.words:
+            self.assertTrue(word.isalpha() and word.islower(), word)
+
+
+class HardTextTests(unittest.TestCase):
+    def setUp(self):
+        self.text = logic.generate_text(60, random.Random(11), logic.HARD)
+        self.tokens = self.text.split(" ")
+
+    def test_R3_1_hard_tokens_are_hard_words_or_numbers(self):
+        for token in self.tokens:
+            word = bare_word(token)
+            self.assertTrue(word.isdigit() or word in logic.HARD_WORDS, token)
+
+    def test_R3_1_hard_starts_with_capital(self):
+        self.assertTrue(self.text[0].isupper())
+
+    def test_R3_1_hard_ends_with_sentence_punctuation(self):
+        self.assertIn(self.text[-1], SENTENCE_ENDS)
+
+    def test_R3_1_hard_capital_after_each_sentence_end(self):
+        for before, after in zip(self.tokens, self.tokens[1:]):
+            if before[-1] in SENTENCE_ENDS and not after[0].isdigit():
+                self.assertTrue(after[0].isupper(), f"{before} {after}")
+
+    def test_R3_1_hard_mid_sentence_words_are_lowercase(self):
+        for before, after in zip(self.tokens, self.tokens[1:]):
+            if before[-1] not in SENTENCE_ENDS:
+                self.assertFalse(after[0].isupper(), f"{before} {after}")
+
+    def test_R3_1_hard_contains_commas_sentence_ends_and_numbers(self):
+        self.assertIn(",", self.text)
+        self.assertTrue(any(ch in self.text[:-1] for ch in SENTENCE_ENDS))
+        self.assertTrue(any(ch.isdigit() for ch in self.text))
+
+    def test_R3_1_hard_text_works_as_typing_test(self):
+        t = logic.TypingTest(self.text)
+        for ch in self.text:
+            t.type_char(ch)
+        self.assertTrue(t.is_finished())
+        self.assertEqual(t.correct_count(), len(self.text))
+
+
 if __name__ == "__main__":
     unittest.main()
