@@ -7,6 +7,7 @@ screen and reads keys.
 
 import curses
 import os
+import sys
 import time
 
 import logic
@@ -20,7 +21,6 @@ BACKSPACE_KEYS = {curses.KEY_BACKSPACE, 8, 127}
 ENTER_KEYS = {curses.KEY_ENTER, 10, 13, 459}  # 459 = keypad Enter on Windows
 
 LEFT_MARGIN = 2
-TEXT_TOP = 3  # screen row where the test text starts
 
 # Color pair numbers (set up in init_colors)
 GREEN, RED, GREEN_BOX, RED_BOX = 1, 2, 3, 4
@@ -46,6 +46,23 @@ def safe_addstr(win, row, col, text, attr=0):
 def centered(win, row, text, attr=0):
     _, cols = win.getmaxyx()
     safe_addstr(win, row, max(0, (cols - len(text)) // 2), text, attr)
+
+
+def handle_resize(key):
+    """React to the terminal being zoomed (Ctrl+scroll) or resized (R4.1).
+
+    Returns True if `key` was a resize event. On Windows (PDCurses) curses must
+    be told to re-read the window size; other systems update it automatically.
+    The screens re-read getmaxyx() on every redraw, so the layout then follows.
+    """
+    if key != curses.KEY_RESIZE:
+        return False
+    if sys.platform == "win32":
+        try:
+            curses.resize_term(0, 0)
+        except curses.error:
+            pass
+    return True
 
 
 def option_row(options, selected):
@@ -144,12 +161,15 @@ def countdown(stdscr):
     end = time.monotonic() + logic.COUNTDOWN_SECONDS
     while (left := end - time.monotonic()) > 0:
         stdscr.erase()
-        rows, _ = stdscr.getmaxyx()
+        rows, cols = stdscr.getmaxyx()
         centered(stdscr, rows // 2 - 1, "Get ready...")
         centered(stdscr, rows // 2 + 1, str(int(left) + 1), curses.A_BOLD)
+        centered(stdscr, rows // 2 + 3, logic.zoom_tip(cols))
         centered(stdscr, rows - 1, "Esc: quit", curses.A_DIM)
         stdscr.refresh()
-        if stdscr.getch() == KEY_ESC:
+        key = stdscr.getch()
+        handle_resize(key)
+        if key == KEY_ESC:
             return False
     return True
 
@@ -171,12 +191,13 @@ def char_attr(test, i):
 
 def draw_test(stdscr, test, seconds_left):
     stdscr.erase()
-    _, cols = stdscr.getmaxyx()
+    rows, cols = stdscr.getmaxyx()
     safe_addstr(stdscr, 0, LEFT_MARGIN, "Typing Test", curses.A_BOLD)
     safe_addstr(stdscr, 1, LEFT_MARGIN, f"Time left: {seconds_left:2d}s    Esc: quit")
-    width = cols - 2 * LEFT_MARGIN
-    for i, (row, col) in enumerate(logic.wrap_positions(test.target, width)):
-        safe_addstr(stdscr, TEXT_TOP + row, LEFT_MARGIN + col, test.target[i], char_attr(test, i))
+    # R4.2: the text block sits in the middle of the screen.
+    for i, (row, col) in enumerate(logic.centered_positions(test.target, cols, rows)):
+        safe_addstr(stdscr, row, col, test.target[i], char_attr(test, i))
+    centered(stdscr, rows - 1, logic.zoom_tip(cols), curses.A_DIM)  # R4.1
     stdscr.refresh()
 
 
@@ -191,6 +212,8 @@ def run_test(stdscr, text):
             break
         draw_test(stdscr, test, int(logic.TEST_SECONDS - elapsed + 0.999))
         key = stdscr.getch()
+        if handle_resize(key):
+            continue  # redraw at the new size
         if key == KEY_ESC:
             return None
         if key in BACKSPACE_KEYS:
