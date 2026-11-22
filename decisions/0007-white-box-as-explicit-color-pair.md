@@ -1,6 +1,6 @@
 # 0007. Draw the hover box as an explicit black-on-white color pair
 
-- Status: accepted
+- Status: superseded by 0013 (Round 6, R6.2: brackets replaced the white box)
 - Date: 2026-11-22
 - Round: 5 (requirement R5.1, white box behind the hovered button)
 

@@ -1,6 +1,6 @@
 # 0008. Equal-width buttons, laid out by pure functions in logic.py
 
-- Status: accepted
+- Status: accepted, amended by 0013 (Round 6, R6.2: labels are padded for [ ] brackets instead of the white box)
 - Date: 2026-11-22
 - Round: 5 (requirement R5.1, white box behind the hovered button)
 
