@@ -36,6 +36,19 @@
             (, . ? !) and numbers
         -   Every difficulty uses the same timer, word count, and "% of people beaten" scale
 
+    Typing test screen layout (countdown and test screens):
+
+        -   Text size: a terminal program cannot change the terminal's font, so the
+            countdown and test screens show a tip telling the user how to zoom the
+            terminal (hold Ctrl and scroll the mouse wheel, or press Ctrl+= / Ctrl+-).
+            A shorter tip is shown on narrow screens, and none if it cannot fit
+        -   When the terminal is zoomed or resized, the screen is redrawn to fit the new size
+        -   The test text is a left-aligned block of lines at most 60 columns wide
+            (narrower if the screen is narrower)
+        -   The block is centered left-to-right between the screen edges
+            (|-++-|: the text is the "++", the edges are the "|  |") and
+            top-to-bottom, but never above the title and timer at the top
+
     When the user is taking the test:
 
         -   correctly typed characters recolors them as green (for spaces, a green box the size of a letter will appear where the space would be)
