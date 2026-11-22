@@ -25,7 +25,7 @@
                 1.  Easy
                 2.  Medium
                 3.  Hard
-        -   A countdown from 5 starts
+        -   A countdown from 5 starts on the animated "Get ready" screen (see below)
         -   A typing test of the chosen difficulty appears after 0 and a new timer of 45 seconds starts
 
     Difficulty levels (standard typing test only):
@@ -35,6 +35,29 @@
         -   Hard: long words written as sentences, with capital letters, punctuation
             (, . ? !) and numbers
         -   Every difficulty uses the same timer, word count, and "% of people beaten" scale
+
+    "Get ready" screen (the 5-second countdown before every test, standard and custom):
+
+        -   An animation plays for the whole countdown, about 20 frames per second
+        -   Rocket: the 🚀 emoji, drawn as it is (a terminal cannot rotate a
+            character, so it points up and to the right, as the font draws it).
+            The rocket flies in that direction: up and to the right
+        -   The rocket stays near the middle of the screen and shakes a little
+            (one column or row each frame); the world moving past it shows the flight
+        -   If the terminal cannot draw the emoji, a small ASCII rocket is drawn instead
+        -   Fire trail: a thick trail streams out behind the rocket, down and to the
+            left, and gets thinner farther away. It flickers, mixing white, yellow,
+            orange, and red: hottest (white/yellow) next to the rocket, red at the end
+        -   Stars: streaking stars move down and to the left past the rocket, each
+            with a short tail, so the rocket looks like it is moving fast
+        -   Planet: a very large purple and blue planet, centered behind the rocket,
+            that drifts down and to the left very slowly (a few cells over the whole
+            countdown), so it looks far away
+        -   Drawn back to front: planet, stars, fire trail, rocket, then the text
+        -   Text: "Get ready..." and the countdown number at the top, the zoom tip
+            and "Esc: quit" at the bottom, so they never cover the rocket
+        -   Terminals with fewer colors use the closest ones (orange becomes
+            yellow, purple becomes magenta)
 
     Typing test screen layout (countdown and test screens):
 
