@@ -4,6 +4,7 @@ Keeping this separate from main.py (the curses UI) means every function here
 can be tested with plain unit tests, without opening a terminal window.
 """
 
+import math
 import os
 import random
 from collections import namedtuple
@@ -387,3 +388,131 @@ def button_row(options, selected, screen_cols, row):
     left = max(0, (screen_cols - total) // 2)
     return [Button(row, left + i * (width + BUTTON_GAP), label, i == selected)
             for i, label in enumerate(labels)]
+
+
+# --- "Get ready" animation (R6.1) ----------------------------------------------
+#
+# A night sky: stars that stay in place and twinkle, behind a very large,
+# still, Jupiter-style planet in purples and blues. The planet is drawn as
+# filled boxes (a space on a colored background).
+
+FRAME_SECONDS = 0.05      # 20 animation frames per second
+BOX = " "                 # a filled box: a space drawn on a colored background
+
+STAR_SEED = 299           # fixed seed: the same star pattern every countdown
+STAR_CELLS_PER_STAR = 40  # about one star for every 40 screen cells
+# One twinkle: the (character, brightness) steps a star goes through, then repeats.
+# Brightness names are turned into dim / normal / bold white by main.py.
+TWINKLE = (
+    (".", "star_dim"), (".", "star_dim"), ("+", "star"),
+    ("*", "star_bright"), ("+", "star"), (".", "star_dim"),
+)
+TWINKLE_SPEEDS = (3, 4, 5, 6)  # frames per twinkle step; each star gets its own
+
+# The planet: a Jupiter-style gas giant in shades of purple and blue, with many
+# thin wavy bands and a big oval "Great Spot" below the middle, right of center.
+PLANET_SIZE = 0.45        # planet radius as a fraction of the screen's smaller side
+PLANET_BANDS = (          # top to bottom, then repeated
+    "light_purple", "purple", "dark_blue", "light_blue", "blue",
+    "purple", "light_purple", "blue", "dark_blue", "light_blue",
+)
+PLANET_BANDS_ACROSS = 10  # about how many bands fit from top to bottom
+PLANET_WAVE_LENGTH = 3.0  # columns per radian of the band edges' wave
+SPOT_CORE = "bright_purple"   # the spot has its own shades so it stands out
+SPOT_RIM = "dark_purple"
+PLANET_COLORS = tuple(sorted(set(PLANET_BANDS) | {SPOT_CORE, SPOT_RIM}))
+
+# One colored character on screen. `color` is a name ("star_dim", "blue", ...);
+# main.py turns it into a curses color.
+Cell = namedtuple("Cell", ["row", "col", "char", "color"])
+
+
+def animation_frame(elapsed_seconds):
+    """Which animation frame to show `elapsed_seconds` after the countdown started."""
+    return int(elapsed_seconds / FRAME_SECONDS)
+
+
+def _on_screen(cells, screen_cols, screen_rows):
+    return [c for c in cells if 0 <= c.row < screen_rows and 0 <= c.col < screen_cols]
+
+
+def countdown_text_rows(screen_rows):
+    """Rows for the countdown text: at the top and bottom, around the planet."""
+    return {"title": 1, "number": 2, "tip": screen_rows - 2, "hint": screen_rows - 1}
+
+
+def star_field(screen_cols, screen_rows, frame):
+    """Stars that stay in place and twinkle, hidden behind the planet.
+
+    Each star has a fixed spot, its own twinkle speed, and its own starting
+    point in TWINKLE, so the stars don't all blink together. The same frame
+    always gives the same stars (fixed seed).
+    """
+    rng = random.Random(STAR_SEED)
+    count = max(5, screen_cols * screen_rows // STAR_CELLS_PER_STAR)
+    planet = planet_background(screen_cols, screen_rows)
+    cells = []
+    for _ in range(count):
+        row = rng.randrange(max(1, screen_rows))
+        col = rng.randrange(max(1, screen_cols))
+        speed = rng.choice(TWINKLE_SPEEDS)
+        phase = rng.randrange(len(TWINKLE))
+        if (row, col) in planet:
+            continue  # far-away stars are behind the planet
+        char, brightness = TWINKLE[(frame // speed + phase) % len(TWINKLE)]
+        cells.append(Cell(row, col, char, brightness))
+    return _on_screen(cells, screen_cols, screen_rows)
+
+
+def _planet_radius(screen_cols, screen_rows):
+    return max(1, int(min(screen_rows, screen_cols / 2) * PLANET_SIZE))
+
+
+def planet_spot(screen_cols, screen_rows):
+    """The Great Spot oval: (center_row, center_col, row_radius, col_radius)."""
+    radius = _planet_radius(screen_cols, screen_rows)
+    return (screen_rows // 2 + max(1, round(radius * 0.35)),
+            screen_cols // 2 + round(radius * 0.6),
+            max(1, radius // 5),
+            max(2, round(radius * 0.8)))
+
+
+def planet_cells(screen_cols, screen_rows):
+    """A very large Jupiter-style planet in purples and blues, centered on the screen.
+
+    Many thin bands run across it; their edges wave up and down a row, like
+    Jupiter's cloud belts. A big oval spot (a bright core with a dark rim, in
+    shades the bands don't use) sits below the middle, right of center. It
+    never moves (it is far away), so it doesn't depend on the frame. Columns
+    count half as much as rows when measuring the circle, so it looks round.
+    """
+    radius = _planet_radius(screen_cols, screen_rows)
+    center_row = screen_rows // 2
+    center_col = screen_cols // 2
+    band_height = max(1, (2 * radius + 1) // PLANET_BANDS_ACROSS)
+    spot_row, spot_col, spot_rr, spot_rc = planet_spot(screen_cols, screen_rows)
+    cells = []
+    for dr in range(-radius, radius + 1):
+        for dc in range(-2 * radius, 2 * radius + 1):
+            if dr * dr + (dc / 2) ** 2 > radius * radius:
+                continue
+            row, col = center_row + dr, center_col + dc
+            # The spot: an oval measured from its center (0 at the middle, 1 at the edge).
+            spot = ((row - spot_row) / (spot_rr + 0.5)) ** 2 + ((col - spot_col) / (spot_rc + 0.5)) ** 2
+            if spot <= 1:
+                color = SPOT_CORE if spot <= 0.45 else SPOT_RIM
+            else:
+                band = (dr + radius) // band_height
+                wave = round(math.sin(dc / PLANET_WAVE_LENGTH + band))
+                color = PLANET_BANDS[((dr + radius + wave) // band_height) % len(PLANET_BANDS)]
+            cells.append(Cell(row, col, BOX, color))
+    return _on_screen(cells, screen_cols, screen_rows)
+
+
+def planet_background(screen_cols, screen_rows):
+    """{(row, col): planet color} for every screen cell the planet covers.
+
+    Text drawn on top of the planet uses this color as its background, so it
+    doesn't show a black box over the planet.
+    """
+    return {(c.row, c.col): c.color for c in planet_cells(screen_cols, screen_rows)}

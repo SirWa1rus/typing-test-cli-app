@@ -443,10 +443,6 @@ class CenteredPositionsTests(unittest.TestCase):
         self.assertEqual(logic.centered_positions("", 80, 24), [])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class ButtonHighlightTests(unittest.TestCase):
     """R5.1: a white box behind the selectable button the user is on.
 
@@ -536,3 +532,142 @@ class ButtonHighlightTests(unittest.TestCase):
     def test_R5_1_move_selection_stops_at_ends(self):
         self.assertEqual(logic.move_selection(0, -1, 3), 0)
         self.assertEqual(logic.move_selection(2, 1, 3), 2)
+
+
+class GetReadyAnimationTests(unittest.TestCase):
+    """R6.1: the animated "Get ready" screen (twinkling stars, Jupiter-style planet)."""
+
+    COLS, ROWS = 80, 24
+    FRAMES = range(100)  # every frame of a 5-second countdown at 20 frames/second
+    PLANET_SHADES = {"purple", "light_purple", "dark_purple", "bright_purple",
+                     "blue", "light_blue", "dark_blue"}
+
+    def on_screen(self, cells, cols=COLS, rows=ROWS):
+        return all(0 <= c.row < rows and 0 <= c.col < cols for c in cells)
+
+    def stars(self, frame):
+        return logic.star_field(self.COLS, self.ROWS, frame)
+
+    # --- frames ---
+
+    def test_R6_1_frames_count_up_twenty_per_second(self):
+        self.assertEqual(logic.animation_frame(0), 0)
+        self.assertEqual(logic.animation_frame(0.049), 0)
+        self.assertEqual(logic.animation_frame(1.0), 20)
+
+    # --- twinkling stars ---
+
+    def test_R6_1_stars_stay_in_place(self):
+        spots = lambda f: [(c.row, c.col) for c in self.stars(f)]
+        for frame in self.FRAMES:
+            self.assertEqual(spots(frame), spots(0))
+
+    def test_R6_1_every_star_twinkles(self):
+        cycle = len(logic.TWINKLE) * max(logic.TWINKLE_SPEEDS)
+        looks = {}
+        for frame in range(cycle):
+            for c in self.stars(frame):
+                looks.setdefault((c.row, c.col), set()).add(c.char)
+        self.assertTrue(looks)
+        for spot, chars in looks.items():
+            self.assertEqual(chars, {".", "+", "*"}, spot)  # dim, normal, and bright
+
+    def test_R6_1_stars_do_not_all_blink_together(self):
+        for frame in (0, 17, 50):
+            self.assertGreater(len({c.char for c in self.stars(frame)}), 1)
+
+    def test_R6_1_stars_use_twinkle_looks_only(self):
+        allowed = set(logic.TWINKLE)
+        for frame in range(30):
+            for c in self.stars(frame):
+                self.assertIn((c.char, c.color), allowed)
+
+    def test_R6_1_twinkle_goes_dim_normal_bright(self):
+        brightness = [b for _, b in logic.TWINKLE]
+        self.assertEqual(set(brightness), {"star_dim", "star", "star_bright"})
+
+    def test_R6_1_stars_are_behind_the_planet(self):
+        planet = logic.planet_background(self.COLS, self.ROWS)
+        for frame in (0, 33):
+            for c in self.stars(frame):
+                self.assertNotIn((c.row, c.col), planet)
+
+    def test_R6_1_enough_stars_and_on_screen(self):
+        stars = self.stars(0)
+        self.assertGreater(len(stars), 15)
+        self.assertTrue(self.on_screen(stars))
+        self.assertTrue(self.on_screen(logic.star_field(10, 4, 0), 10, 4))
+
+    def test_R6_1_stars_repeatable(self):
+        self.assertEqual(self.stars(5), self.stars(5))
+
+    # --- planet (Jupiter-style, purple and blue) ---
+
+    def planet(self):
+        return logic.planet_cells(self.COLS, self.ROWS)
+
+    def test_R6_1_planet_is_very_large(self):
+        self.assertGreater(len(self.planet()), 0.2 * self.COLS * self.ROWS)
+
+    def test_R6_1_planet_only_purples_and_blues(self):
+        colors = {c.color for c in self.planet()}
+        self.assertLessEqual(colors, self.PLANET_SHADES)
+        self.assertTrue(any("purple" in c for c in colors))
+        self.assertTrue(any("blue" in c for c in colors))
+
+    def test_R6_1_planet_has_many_bands_like_jupiter(self):
+        mid_col = self.COLS // 2
+        column = [c.color for c in sorted(self.planet(), key=lambda c: c.row) if c.col == mid_col]
+        changes = sum(1 for a, b in zip(column, column[1:]) if a != b)
+        self.assertGreaterEqual(changes, 6)
+
+    def test_R6_1_planet_bands_are_wavy(self):
+        spot = {logic.SPOT_CORE, logic.SPOT_RIM}
+        wavy_rows = 0
+        for row in range(self.ROWS):
+            colors = {c.color for c in self.planet() if c.row == row and c.color not in spot}
+            wavy_rows += len(colors) > 1
+        self.assertGreater(wavy_rows, 5)  # band edges cross many rows, so they wave
+
+    def test_R6_1_planet_has_a_great_spot(self):
+        spot_row, spot_col, row_radius, col_radius = logic.planet_spot(self.COLS, self.ROWS)
+        colors = {(c.row, c.col): c.color for c in self.planet()}
+        self.assertEqual(colors[(spot_row, spot_col)], logic.SPOT_CORE)
+        self.assertGreater(spot_row, self.ROWS // 2)           # below the middle
+        self.assertGreater(spot_col, self.COLS // 2)           # right of center
+        self.assertGreater(col_radius, row_radius)             # a wide oval
+        self.assertNotIn(logic.SPOT_CORE, logic.PLANET_BANDS)  # it stands out from the bands
+        self.assertNotIn(logic.SPOT_RIM, logic.PLANET_BANDS)
+
+    def test_R6_1_planet_centered(self):
+        cells = self.planet()
+        mid_row = (min(c.row for c in cells) + max(c.row for c in cells)) / 2
+        mid_col = (min(c.col for c in cells) + max(c.col for c in cells)) / 2
+        self.assertLessEqual(abs(mid_row - self.ROWS // 2), 1)
+        self.assertLessEqual(abs(mid_col - self.COLS // 2), 2)
+
+    def test_R6_1_planet_stays_still(self):
+        self.assertEqual(self.planet(), self.planet())  # no frame input: it cannot move
+
+    def test_R6_1_planet_clipped_to_screen(self):
+        self.assertTrue(self.on_screen(self.planet()))
+        self.assertTrue(self.on_screen(logic.planet_cells(10, 4), 10, 4))
+
+    # --- no black boxes behind text on the planet ---
+
+    def test_R6_1_background_matches_planet_and_is_empty_off_planet(self):
+        background = logic.planet_background(self.COLS, self.ROWS)
+        for c in self.planet():
+            self.assertEqual(background[(c.row, c.col)], c.color)
+        self.assertNotIn((0, 0), background)  # top-left corner is open space
+
+    # --- text ---
+
+    def test_R6_1_text_at_top_and_bottom(self):
+        rows = logic.countdown_text_rows(self.ROWS)
+        self.assertEqual((rows["title"], rows["number"]), (1, 2))
+        self.assertEqual((rows["tip"], rows["hint"]), (self.ROWS - 2, self.ROWS - 1))
+
+
+if __name__ == "__main__":
+    unittest.main()

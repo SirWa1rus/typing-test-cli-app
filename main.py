@@ -24,8 +24,71 @@ LEFT_MARGIN = 2
 
 # Color pair numbers (set up in init_colors)
 GREEN, RED, GREEN_BOX, RED_BOX, HIGHLIGHT = 1, 2, 3, 4, 5
+# R6.1 animation colors are numbered from here on (see init_animation_colors).
+FIRST_ANIMATION_PAIR = 6
 
 BRIGHT_WHITE = 15  # color 7 (COLOR_WHITE) is often light gray; 15 is true white
+
+# Animation color name (from logic.Cell.color) -> curses attribute, and planet
+# color name -> "white on that color" for things drawn over the planet. Filled
+# in by init_colors(); they stay empty (plain text) if the terminal has no colors.
+CELL_ATTRS = {}
+ON_PLANET = {}
+# Without colors the planet's filled boxes would be invisible, so this is drawn instead.
+NO_COLOR_PLANET = ":"
+# Extra style for each twinkle step of a star (logic.TWINKLE brightness names).
+# Dim stars also get a gray color pair, because A_DIM does nothing on Windows.
+STAR_STYLE = {"star_dim": curses.A_DIM, "star": curses.A_NORMAL, "star_bright": curses.A_BOLD}
+
+
+def animation_colors():
+    """Color name -> curses color number for the R6.1 animation.
+
+    Basic colors use curses' own names (COLOR_YELLOW, ...), never raw numbers:
+    on Windows, curses numbers colors in a different order (there, 11 is
+    bright cyan, not bright yellow). A "bright" color is the basic one + 8 in
+    both orders. The in-between shades (the purples and blues) need a 256-color
+    terminal; otherwise the closest basic color is used.
+    """
+    def pick(wanted, fallback):
+        return wanted if curses.COLORS > wanted else fallback
+
+    def bright(color):
+        return color + 8 if curses.COLORS >= 16 else color
+
+    return {
+        # stars, and text drawn over the planet
+        "white": bright(curses.COLOR_WHITE),
+        # planet (Jupiter-style bands and spot)
+        "purple": pick(93, curses.COLOR_MAGENTA),
+        "light_purple": pick(141, bright(curses.COLOR_MAGENTA)),
+        "dark_purple": pick(54, curses.COLOR_MAGENTA),
+        "bright_purple": pick(170, bright(curses.COLOR_MAGENTA)),
+        "blue": pick(27, curses.COLOR_BLUE),
+        "light_blue": pick(75, bright(curses.COLOR_BLUE)),
+        "dark_blue": pick(18, curses.COLOR_BLUE),
+    }
+
+
+def init_animation_colors():
+    """Color pairs for the R6.1 animation: a solid box for every color, white
+    stars, and "white on <planet color>" for text drawn over the planet."""
+    colors = animation_colors()
+    white = colors["white"]
+    pair = FIRST_ANIMATION_PAIR
+    for name, color in colors.items():
+        curses.init_pair(pair, color, color)  # same text and background: a solid box
+        CELL_ATTRS[name] = curses.color_pair(pair)
+        pair += 1
+    gray = curses.COLOR_BLACK + 8 if curses.COLORS >= 16 else curses.COLOR_WHITE
+    for name, color in (("star", white), ("star_bright", white), ("star_dim", gray)):
+        curses.init_pair(pair, color, -1)
+        CELL_ATTRS[name] = curses.color_pair(pair)
+        pair += 1
+    for name in logic.PLANET_COLORS:
+        curses.init_pair(pair, white, colors[name])
+        ON_PLANET[name] = curses.color_pair(pair)
+        pair += 1
 
 
 def init_colors():
@@ -38,6 +101,7 @@ def init_colors():
     # R5.1: black text on a white box for the button the user is on.
     white = BRIGHT_WHITE if curses.COLORS > BRIGHT_WHITE else curses.COLOR_WHITE
     curses.init_pair(HIGHLIGHT, curses.COLOR_BLACK, white)
+    init_animation_colors()
 
 
 def highlight_attr():
@@ -163,17 +227,63 @@ def ask_custom_text(stdscr):
             path += chr(key)
 
 
+def over_planet(background, row, col, attr):
+    """`attr`, but with the planet's color behind it if (row, col) is on the planet.
+
+    This is what stops text drawn on the planet showing a black box (R6.1).
+    """
+    color = background.get((row, col))
+    return ON_PLANET[color] | (attr & curses.A_BOLD) if color in ON_PLANET else attr
+
+
+def draw_cells(win, cells):
+    """Draw logic.Cell objects in their named colors (R6.1).
+
+    Filled boxes (a space: the planet) use their own color. Stars are white,
+    drawn dim, normal, or bold depending on their twinkle step.
+    """
+    for c in cells:
+        char = c.char
+        if char == logic.BOX:
+            attr = CELL_ATTRS.get(c.color, curses.A_NORMAL)
+            if c.color not in CELL_ATTRS:  # no colors: a box would be invisible
+                char = NO_COLOR_PLANET
+        else:
+            attr = CELL_ATTRS.get(c.color, curses.A_NORMAL) | STAR_STYLE.get(c.color, 0)
+        safe_addstr(win, c.row, c.col, char, attr)
+
+
+def centered_over_planet(win, row, text, attr, background):
+    """Like centered(), but each character keeps the planet's color behind it."""
+    _, cols = win.getmaxyx()
+    start = max(0, (cols - len(text)) // 2)
+    for i, ch in enumerate(text):
+        safe_addstr(win, row, start + i, ch, over_planet(background, row, start + i, attr))
+
+
+def draw_get_ready_animation(win, frame):
+    """One frame of the R6.1 animation: twinkling stars and the planet."""
+    rows, cols = win.getmaxyx()
+    draw_cells(win, logic.star_field(cols, rows, frame))
+    draw_cells(win, logic.planet_cells(cols, rows))
+
+
 def countdown(stdscr):
-    """Show 5..1 before the test. Returns False if the user pressed Esc."""
-    stdscr.timeout(50)  # getch waits at most 50 ms so the countdown keeps moving
-    end = time.monotonic() + logic.COUNTDOWN_SECONDS
+    """Show 5..1 over the starry-sky animation (R6.1). Returns False if the user pressed Esc."""
+    stdscr.timeout(int(logic.FRAME_SECONDS * 1000))  # wake up once per animation frame
+    start = time.monotonic()
+    end = start + logic.COUNTDOWN_SECONDS
     while (left := end - time.monotonic()) > 0:
         stdscr.erase()
         rows, cols = stdscr.getmaxyx()
-        centered(stdscr, rows // 2 - 1, "Get ready...")
-        centered(stdscr, rows // 2 + 1, str(int(left) + 1), curses.A_BOLD)
-        centered(stdscr, rows // 2 + 3, logic.zoom_tip(cols))
-        centered(stdscr, rows - 1, "Esc: quit", curses.A_DIM)
+        background = logic.planet_background(cols, rows)
+        draw_get_ready_animation(stdscr, logic.animation_frame(time.monotonic() - start))
+        text_rows = logic.countdown_text_rows(rows)
+        for name, text, attr in (("title", "Get ready...", curses.A_BOLD),
+                                 ("number", str(int(left) + 1), curses.A_BOLD),
+                                 ("tip", logic.zoom_tip(cols), curses.A_DIM),
+                                 ("hint", "Esc: quit", curses.A_DIM)):
+            centered_over_planet(stdscr, text_rows[name], text, attr, background)
         stdscr.refresh()
         key = stdscr.getch()
         handle_resize(key)
