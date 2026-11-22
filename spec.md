@@ -60,7 +60,19 @@
         -   for a standard test, the difficulty is printed under the wpm
         -   a percentage of how many users they beat is printed under
         -   a selectable option to retry (a standard test retries at the same difficulty with new words)
+        -   a selectable option to go back to the main menu
         -   a selectable option to quit
+
+    Selectable buttons (main menu, difficulty menu, results screen):
+
+        -   The option the user is currently on (hovering over) has a white box
+            behind it, with black text, on any terminal color theme. A terminal
+            without colors uses reverse video instead
+        -   Every button in one menu is the same width (the longest label plus one
+            space on each side), so the box keeps its size as the user moves
+        -   The results screen shows only the white box (no [ ] brackets) to mark
+            the current option
+        -   The custom-file path field is a text field, not a button, so it has no box
 
     Controls:
 
