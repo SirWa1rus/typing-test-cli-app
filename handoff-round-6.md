@@ -5,7 +5,7 @@ the standing rules for every session (commits, test names, decision records,
 Git Bash, winpty, history.md, layout math in logic.py, buttons (rule 16, now
 **brackets**), and, new this round, **rule 17: animations**). This file
 describes the state of the project at the end of Round 6. It replaces
-`arch-round-5.md` and the older handoffs; where they disagree, this file is
+`handoff-round-5.md` and the older handoffs; where they disagree, this file is
 correct.
 
 ## Current state (2026-11-22)
@@ -94,12 +94,12 @@ the agent's scratch folder, not in the project).
 | `logic.py` | Pure logic, with no curses import. Settings, word lists, `generate_text()`, `TypingTest`, scoring, `wrap_positions()`, the R2 custom-file functions, the R4 layout (`zoom_tip()`, `centered_positions()`), the buttons (`Button`, **(R6.2)** `BRACKET_OPEN`, `BRACKET_CLOSE`, `NO_BRACKET`, `button_labels(options, selected)`, `move_selection()`, `vertical_menu_buttons()`, `button_row()`), and **(R6)** the animation: `FRAME_SECONDS`, `BOX`, `STAR_SEED`, `STAR_CELLS_PER_STAR`, `TWINKLE`, `TWINKLE_SPEEDS`, `PLANET_SIZE`, `PLANET_BANDS`, `PLANET_BANDS_ACROSS`, `PLANET_WAVE_LENGTH`, `SPOT_CORE`, `SPOT_RIM`, `PLANET_COLORS`, `Cell` (namedtuple `row, col, char, color`), `animation_frame()`, `countdown_text_rows()`, `star_field()`, `planet_spot()`, `planet_cells()`, `planet_background()`. Now also imports `math`. |
 | `main.py` | The curses UI only. **(R6.2)** the white box is removed: no `HIGHLIGHT` pair, `highlight_attr()`, or `BRIGHT_WHITE`; `draw_buttons()` prints the button text as is. **(R6.1)** `animation_colors()` (color name -> curses color number), `init_animation_colors()` (pairs from 6 up), `CELL_ATTRS`, `ON_PLANET`, `STAR_STYLE`, `NO_COLOR_PLANET`, `over_planet()`, `draw_cells()`, `centered_over_planet()`, `draw_get_ready_animation()`, and a rewritten `countdown()`. Everything else is as in Round 5. |
 | `tests/test_logic.py` | `unittest` tests for `logic.py`. Round 6 added `GetReadyAnimationTests` (R6.1) and `ButtonBracketTests` (R6.2, replacing four white-box tests in `ButtonHighlightTests`), and moved the `if __name__ == "__main__"` block to the end of the file (it used to sit before the R5 tests). |
-| `decisions/` | Y-statement records `0001`-`0013` (`0009`-`0013` are new this round; `0007` is now marked superseded by `0013`, and `0008` amended by it). |
+| `docs/decisions/` | Y-statement records `0001`-`0013` (`0009`-`0013` are new this round; `0007` is now marked superseded by `0013`, and `0008` amended by it). |
 | `spec.md` | The feature spec, with the new "Get ready" screen section. |
 | `problem.md` | The problem statement and per-round requirements, tagged `R1.1` ... `R6.2`. |
 | `history.md` | A log of every session. |
 | `samples/sample.txt` | A valid custom-test file, for trying R2.1 by hand. |
-| `arch-round-1.md` .. `arch-round-5.md` | Older handoffs, now out of date. |
+| `arch-round-1.md` .. `handoff-round-5.md` | Older handoffs, now out of date. |
 
 ## Program flow
 
@@ -178,12 +178,12 @@ The user chose these when asked or when giving feedback:
 | --- | --- |
 | **Requirement ID R6.1** for the whole bullet. | Like R4.1 and R5.1. |
 | **R6.2** for the bracket bullet, tagged in problem.md. | Round 6, bullet 2. |
-| **`[ Retry ]` brackets with a space inside**, on **all three menus**, with the white box **removed completely**. | The user's new requirement and choices. See `decisions/0013`. |
+| **`[ Retry ]` brackets with a space inside**, on **all three menus**, with the white box **removed completely**. | The user's new requirement and choices. See `docs/decisions/0013`. |
 | **The agent commits the R6.2 work in small steps, except `history.md`.** | The user asked. |
-| **Twinkling stars that stay in place; no rocket, no fire, no moving stars.** | After the rocket and fire didn't work in Git Bash. See `decisions/0009`. |
+| **Twinkling stars that stay in place; no rocket, no fire, no moving stars.** | After the rocket and fire didn't work in Git Bash. See `docs/decisions/0009`. |
 | **Jupiter look in purple and blue** (not Jupiter's real tan/brown colors). | Keeps R6.1's "purple and blue planet". |
 | **The planet is centered and stays still.** | It is far away. |
-| **No black boxes behind characters on the planet.** | They looked bad. See `decisions/0011`. |
+| **No black boxes behind characters on the planet.** | They looked bad. See `docs/decisions/0011`. |
 | **Remove the tests for removed features** (including a guard test checking the rocket and fire stayed removed). | The user asked. |
 | **The agent committed `spec.md` only.** | The round prompt approved it. |
 
@@ -196,18 +196,18 @@ has not confirmed them one by one:
 - **Dim stars are gray** (`COLOR_BLACK + 8`), because `A_DIM` does nothing on
   Windows. Normal stars are white, bright ones bold white.
 - **Stars are hidden behind the planet**, not drawn on top of it
-  (`decisions/0011`).
+  (`docs/decisions/0011`).
 - About **one star per 40 screen cells**, the same pattern every countdown
   (`STAR_SEED = 299`).
 - **20 frames per second**, with every frame computed from the frame number
-  alone (`decisions/0010`).
+  alone (`docs/decisions/0010`).
 - **The countdown text moved** from the middle of the screen to rows 1-2 and
   the last two rows; "Get ready..." is now bold.
 - **Planet:** radius 45% of the screen's smaller side, about 10 bands, band
   edges waving one row, spot below and right of center with its own shades.
   256-color shades: purples 93 / 141 / 54 / 170, blues 27 / 75 / 18, falling
   back to magenta / bright magenta / blue / bright blue.
-- **Colors by curses name, + 8 for bright** (`decisions/0012`), to fix the
+- **Colors by curses name, + 8 for bright** (`docs/decisions/0012`), to fix the
   green fire.
 - Without colors, the planet is drawn with `:` characters.
 - **Four decision records** (0009-0012), and 0009 was rewritten and renamed as

@@ -3,7 +3,7 @@
 For a fresh session starting the next round. Read `CLAUDE.md` first: it holds
 the standing rules for every session (commits, test names, decision records,
 Git Bash, winpty, history.md). This file describes the state of the project at
-the end of Round 3. It replaces `arch-round-2.md` and `arch-round-1.md`; where
+the end of Round 3. It replaces `handoff-round-2.md` and `arch-round-1.md`; where
 they disagree, this file is correct.
 
 ## Current state (2026-11-21)
@@ -32,11 +32,11 @@ they disagree, this file is correct.
 | `main.py`                            | The curses UI only. It holds **(R3)** `vertical_menu(stdscr, title, options, esc_hint)` (a shared numbered menu that returns an index or `None`), `main_menu()`, **(R3)** `choose_difficulty()`, `ask_custom_text()`, `countdown()`, `run_test(stdscr, text)`, `show_results(stdscr, wpm, percent, difficulty=None)`, and `app()`.                                                                                                                                                                                                                                                                                  |
 | `tests/test_logic.py`                | `unittest` tests for `logic.py`, named `test_R<round>_<n>_...`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `samples/sample.txt`                 | A valid custom-test file, for trying R2.1 by hand.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `decisions/`                         | Y-statement records `0001`-`0004` (`0003` and `0004` are new this round).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `docs/decisions/`                         | Y-statement records `0001`-`0004` (`0003` and `0004` are new this round).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `spec.md`                            | The feature spec, updated this round with the difficulty menu and levels.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `problem.md`                         | The problem statement and per-round requirements, tagged `R1.1`... `R3.1`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `history.md`                         | A log of every session.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `arch-round-1.md`, `arch-round-2.md` | Older handoffs, now out of date.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `arch-round-1.md`, `handoff-round-2.md` | Older handoffs, now out of date.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Program flow
 
@@ -80,7 +80,7 @@ The user chose these when asked:
 | Decision                                                                                                                           | Why                                                                               |
 | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | **Medium** = longer, less common lowercase words. **Hard** = long words plus capitals, punctuation (`, . ? !`), and numbers.       | Difficulty should come from what you type, not only from word length.             |
-| The difficulty is picked in a **submenu after Standard** (Easy / Medium / Hard). Esc goes back to the main menu.                   | Keeps the main menu short. Custom tests have no difficulty. See `decisions/0004`. |
+| The difficulty is picked in a **submenu after Standard** (Easy / Medium / Hard). Esc goes back to the main menu.                   | Keeps the main menu short. Custom tests have no difficulty. See `docs/decisions/0004`. |
 | **The same percentile scale** (average 40 WPM) for every difficulty.                                                               | Scores stay directly comparable. Harder text just tends to give a lower WPM.      |
 | **Retry keeps the same difficulty** with new random words, and the results screen shows **"Difficulty: X"** (standard tests only). | You can practice a level repeatedly and see which level the score is for.         |
 
@@ -91,14 +91,14 @@ has not confirmed them one by one:
   of words become a number from 0 to 999, about 15% end a sentence with
   `.`/`?`/`!`, and about 15% get a comma. Each sentence starts with a capital
   letter, and the text always ends with sentence punctuation. See
-  `decisions/0003`. The percentages are `HARD_*_CHANCE` settings in `logic.py`.
+  `docs/decisions/0003`. The percentages are `HARD_*_CHANCE` settings in `logic.py`.
 - The agent picked the 100 Medium and 100 Hard words. Tests check that the lists
   have no duplicates, don't overlap each other or `EASY_WORDS`, and get longer
   on average from Easy to Medium to Hard.
 - Hard uses only `HARD_WORDS`, never Medium words.
 - Difficulty is a `difficulty=` setting on `generate_text()` that defaults to
   Easy, so Round 1 calls work unchanged. An unknown difficulty raises
-  `ValueError`. See `decisions/0004`.
+  `ValueError`. See `docs/decisions/0004`.
 - One shared `vertical_menu()` draws both menus. The difficulty menu takes
   number keys `1`-`3`, like the main menu.
 - Word count (60) and timer (45 s) are the same for every difficulty, as
