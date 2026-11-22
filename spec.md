@@ -39,17 +39,12 @@
     "Get ready" screen (the 5-second countdown before every test, standard and custom):
 
         -   An animation plays for the whole countdown, about 20 frames per second
-        -   Rocket: pixel art made of colored filled boxes, shaped like the 🚀
-            emoji and pointing up and to the right (red nose and fins, white body,
-            light-blue window), 5 rows tall. Each pixel is 2 columns wide so it
-            looks square. It flies in the direction it points: up and to the right.
-            (The real emoji does not display in Git Bash, so it is not used.)
+        -   Rocket: the 🚀 emoji, drawn as it is (a terminal cannot rotate a
+            character, so it points up and to the right, as the font draws it).
+            The rocket flies in that direction: up and to the right
         -   The rocket stays near the middle of the screen and shakes a little
             (one column or row each frame); the world moving past it shows the flight
-        -   Fire trail: a thick trail streams out of the rocket's engine (its
-            bottom-left), down and to the left, and gets thinner farther away. It is made of solid filled boxes
-            (no characters) that flicker, mixing white, yellow, and orange:
-            hottest (white/yellow) next to the rocket, orange at the end
+        -   No fire trail
         -   Stars: streaking stars move down and to the left past the rocket, each
             with a short tail, so the rocket looks like it is moving fast
         -   Planet: a very large planet designed to look like Jupiter, in shades of
@@ -57,14 +52,14 @@
             edges wave up and down, and a big oval "Great Spot" (a bright purple core
             with a dark purple rim) below the middle, right of center. It stays still
             in the center (it is far away)
-        -   Drawn back to front: planet, stars, fire trail, rocket, then the text
-        -   No black boxes: anything drawn on top of the planet (stars, the text)
-            has the planet's color behind it instead of the terminal's
+        -   Drawn back to front: planet, stars, rocket, then the text
+        -   No black boxes: anything drawn on top of the planet (stars, the rocket,
+            the text) has the planet's color behind it instead of the terminal's
             background color
         -   Text: "Get ready..." and the countdown number at the top, the zoom tip
             and "Esc: quit" at the bottom, so they never cover the rocket
-        -   Terminals with fewer than 256 colors use the closest ones (orange
-            becomes yellow, the purple shades become magenta, the blue shades blue)
+        -   Terminals with fewer than 256 colors use the closest ones (the purple
+            shades become magenta, the blue shades blue)
 
     Typing test screen layout (countdown and test screens):
 
