@@ -21,8 +21,20 @@
 
     When the user selects standard typing test:
 
+        -   A difficulty menu appears with three options (Esc goes back to the main menu):
+                1.  Easy
+                2.  Medium
+                3.  Hard
         -   A countdown from 5 starts
-        -   An easy typing test appears after 0 and a new timer of 45 seconds starts
+        -   A typing test of the chosen difficulty appears after 0 and a new timer of 45 seconds starts
+
+    Difficulty levels (standard typing test only):
+
+        -   Easy: short, common, lowercase words
+        -   Medium: longer, less common, lowercase words
+        -   Hard: long words written as sentences, with capital letters, punctuation
+            (, . ? !) and numbers
+        -   Every difficulty uses the same timer, word count, and "% of people beaten" scale
 
     When the user is taking the test:
 
@@ -32,8 +44,9 @@
     After the user runs out of time or finishes the test:
 
         -   users wpm is printed
+        -   for a standard test, the difficulty is printed under the wpm
         -   a percentage of how many users they beat is printed under
-        -   a selectable option to retry
+        -   a selectable option to retry (a standard test retries at the same difficulty with new words)
         -   a selectable option to quit
 
     Controls:
