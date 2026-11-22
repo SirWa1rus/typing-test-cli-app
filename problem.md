@@ -25,3 +25,8 @@
 # Round 3 requirements
 
     -   medium and hard difficulty for standard typing test (R3.1)
+
+# Round 4 requirements
+
+    -   increase the font size in the typing tests (R4.1)
+    -   make sure the typing test text is nice and center (|-++-|, where the text should be where the "++" signs are and the "| |" are the edges of the tui) (R4.2)
