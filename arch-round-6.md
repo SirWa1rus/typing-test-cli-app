@@ -3,8 +3,7 @@
 For a fresh session starting the next round. Read `CLAUDE.md` first: it holds
 the standing rules for every session (commits, test names, decision records,
 Git Bash, winpty, history.md, layout math in logic.py, buttons (rule 16, now
-**brackets**), and, new this round, **rules 17-19: colors by name, ASCII only,
-animations**). This file
+**brackets**), and, new this round, **rule 17: animations**). This file
 describes the state of the project at the end of Round 6. It replaces
 `arch-round-5.md` and the older handoffs; where they disagree, this file is
 correct.
@@ -79,13 +78,12 @@ and a slowly moving planet. Each piece was built, run by the user, and changed:
 | Version | What happened in the user's terminal | Outcome |
 | --- | --- | --- |
 | Emoji rocket flying up-right (a terminal can't rotate a character), fire made of characters, streaking stars | Black boxes behind characters on the planet | Fixed: planet-colored backgrounds; fire as filled boxes, no red; planet made still |
-| Same, with box fire | **Fire looked green**; **rocket showed as `*`** | Green: color-numbering bug, fixed (rule 17, decision 0012). Rocket redrawn as box pixel art; planet made Jupiter-style |
+| Same, with box fire | **Fire looked green**; **rocket showed as `*`** | Green: color-numbering bug, fixed (decision 0012). Rocket redrawn as box pixel art; planet made Jupiter-style |
 | Box-art rocket | The rocket **did not appear** | Back to the emoji; fire scrapped |
 | Emoji rocket, no fire | (user scrapped it) | Rocket and moving stars scrapped; stars twinkle instead |
 
-**Lessons:** emoji don't display in Git Bash + winpty (rule 18); raw color
-numbers mean different colors on Windows (rule 17); `curses.A_DIM` is 0 on
-Windows (rule 18). Why the box rocket didn't appear was **never diagnosed**:
+**Lessons:** emoji don't display in Git Bash + winpty; raw color numbers
+mean different colors on Windows; `curses.A_DIM` is 0 on Windows. Why the box rocket didn't appear was **never diagnosed**:
 the user did not run the emoji/box check script (`emoji_check.py`, kept only in
 the agent's scratch folder, not in the project).
 
@@ -209,8 +207,8 @@ has not confirmed them one by one:
   edges waving one row, spot below and right of center with its own shades.
   256-color shades: purples 93 / 141 / 54 / 170, blues 27 / 75 / 18, falling
   back to magenta / bright magenta / blue / bright blue.
-- **Colors by curses name, + 8 for bright** (`decisions/0012`, now CLAUDE.md
-  rule 17), to fix the green fire.
+- **Colors by curses name, + 8 for bright** (`decisions/0012`), to fix the
+  green fire.
 - Without colors, the planet is drawn with `:` characters.
 - **Four decision records** (0009-0012), and 0009 was rewritten and renamed as
   the design changed (it was untracked at the time).
@@ -241,8 +239,7 @@ has not confirmed them one by one:
 ## Warnings for the next session
 
 - **Standing rules are in CLAUDE.md**, including rule 16, now about brackets,
-  and new rules 17 (colors by name),
-  18 (ASCII only, no `A_DIM`), and 19 (animations, and asking the user to look).
+  and new rule 17 (animations, and asking the user to look).
 - **The tests never import main.py.** A broken, or even unparseable, `main.py`
   still passes all 114 tests (the agent checked this). Bugs in colors,
   drawing order, or timing are only found by running `winpty python main.py`.
