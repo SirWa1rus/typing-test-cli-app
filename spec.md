@@ -85,14 +85,17 @@
 
     Selectable buttons (main menu, difficulty menu, results screen):
 
-        -   The option the user is currently on (hovering over) has a white box
-            behind it, with black text, on any terminal color theme. A terminal
-            without colors uses reverse video instead
-        -   Every button in one menu is the same width (the longest label plus one
-            space on each side), so the box keeps its size as the user moves
-        -   The results screen shows only the white box (no [ ] brackets) to mark
-            the current option
-        -   The custom-file path field is a text field, not a button, so it has no box
+        -   The option the user is currently on (hovering over) is marked with
+            square brackets and a space inside them: [ Retry ]. This replaces the
+            Round 5 white box (R6.2 changes R5.1); there is no box or highlight
+        -   The other options have spaces where the brackets would be, so every
+            button in one menu is the same width (the longest label plus two
+            columns on each side). Only the brackets move as the user moves; the
+            option text never shifts
+        -   The closing bracket sits right after the option's text; shorter
+            options are padded with spaces after it
+        -   The custom-file path field is a text field, not a button, so it has
+            no brackets
 
     Controls:
 
