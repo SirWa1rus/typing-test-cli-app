@@ -83,3 +83,22 @@
 **User:** write arch-round-4.md for the next session (state, how to run, this round's decisions, unresolved items, warnings), and put standing rules in CLAUDE.md. Don't commit either file.
 
 **Agent:** Wrote `arch-round-4.md`. Added CLAUDE.md rule 15 (ask before committing when a round prompt says to commit) and rule 16 (layout math goes in logic.py and is tested). Nothing was committed.
+
+## 2026-11-22: Session 5, Round 5 (Claude Opus 5.5)
+
+**User:** start round 5. Use only the repository. Read problem.md, spec.md, CLAUDE.md, decisions/, and the newest handoff. List the Round 5 requirements and ask about anything unclear before coding. Update spec.md and commit it (approved), write tests named by requirement ID, implement until all tests pass, write at least one Y-statement decision record, and list every decision the user didn't ask for. Don't write the handoff, and never undo or amend a commit.
+
+**Agent:** Read the files (newest handoff: arch-round-4.md). Baseline: 75 tests passing. Listed the one Round 5 requirement, a white box behind the hovered selectable button (R5.1), and asked four questions:
+
+1. Which screens? **User:** all three menus (main, difficulty, results); the path field is not a button.
+2. Reverse video or always white? **User:** always white (explicit black-on-white color pair).
+3. Keep the [ ] brackets on the results screen? **User:** remove them.
+4. Box width? **User:** the same width for every button in a menu.
+
+**Agent:** Updated spec.md and committed it (0d828ea). Added 15 `test_R5_1_*` tests (90 total, all passing). Added `BUTTON_GAP`, `Button`, `button_labels()`, `move_selection()`, `vertical_menu_buttons()`, and `button_row()` to `logic.py`. In `main.py`, added the `HIGHLIGHT` color pair, `highlight_attr()`, and `draw_buttons()`, used them in `vertical_menu()` and `show_results()`, and removed `option_row()`. Wrote `decisions/0007` (white color pair) and `decisions/0008` (equal-width buttons laid out in logic.py). No handoff written.
+
+## 2026-11-22: Session 5, continued (handoff)
+
+**User:** write arch-round-5.md for the next session (state, how to run, this round's decisions, unresolved items, warnings), and put standing rules in CLAUDE.md. Don't commit either file.
+
+**Agent:** Wrote `arch-round-5.md`. Added CLAUDE.md rule 16 (every selectable button uses the R5.1 layout functions and `draw_buttons()`) and rule 17 (when a round prompt approves an agent commit of a file, commit only that file). Nothing was committed.
