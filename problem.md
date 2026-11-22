@@ -21,3 +21,7 @@
 # Round 2 requirements
 
     -   inputting a .txt file in order to create a custom typing test (R2.1)
+
+# Round 3 requirements
+
+    -   medium and hard difficulty for standard typing test (R3.1)
