@@ -64,3 +64,22 @@
 **User:** write arch-round-3.md for the next session (state, how to run, this round's decisions, unresolved items, warnings), and put standing rules in CLAUDE.md. Don't commit either file.
 
 **Agent:** Wrote `arch-round-3.md`. Moved four standing rules from the old handoff warnings into CLAUDE.md as rules 11-14: read-only git is fine and never stage, use Git Bash with the path quoted, windows-curses + winpty, and append to history.md each session. Nothing was committed.
+
+## 2026-11-21: Session 4, Round 4 (Claude Opus 5.5)
+
+**User:** start round 4. Use only the repository. Read problem.md, spec.md, CLAUDE.md, decisions/, and the newest handoff. List the Round 4 requirements and ask about anything unclear before coding. Update spec.md and commit it, write tests named by requirement ID, implement until all tests pass, write at least one Y-statement decision record, and list every decision the user didn't ask for. Don't write the handoff, and never undo or amend a commit.
+
+**Agent:** Read the files (newest handoff: arch-round-3.md). Baseline: 61 tests passing. Listed the Round 4 requirements, a bigger font in the typing tests (R4.1) and centered test text (R4.2), and asked four questions:
+
+1. A curses program can't change the terminal font. How should the text get bigger? **User:** show a tip on screen only (zoom the terminal with Ctrl).
+2. Centering style? **User:** a centered block (lines keep a straight left edge).
+3. Vertical centering too? **User:** yes.
+4. The prompt says to commit spec.md, but CLAUDE.md rule 1 says the user commits. **User:** the agent commits spec.md only, as an exception.
+
+**Agent:** Updated spec.md and committed it (ed2940f). Added 14 tests (4 `test_R4_1_*`, 10 `test_R4_2_*`; 75 total, all passing). Added `TEXT_MAX_WIDTH`, `SIDE_MARGIN`, `TEXT_TOP`, `ZOOM_TIP`, `ZOOM_TIP_SHORT`, `zoom_tip()`, and `centered_positions()` to `logic.py`. In `main.py`, the test text is drawn at the centered positions, the zoom tip shows on the countdown and test screens, and `handle_resize()` redraws after a zoom. Wrote `decisions/0005` (zoom tip) and `decisions/0006` (centered capped block). No handoff written.
+
+## 2026-11-21: Session 4, continued (handoff)
+
+**User:** write arch-round-4.md for the next session (state, how to run, this round's decisions, unresolved items, warnings), and put standing rules in CLAUDE.md. Don't commit either file.
+
+**Agent:** Wrote `arch-round-4.md`. Added CLAUDE.md rule 15 (ask before committing when a round prompt says to commit) and rule 16 (layout math goes in logic.py and is tested). Nothing was committed.
