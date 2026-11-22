@@ -18,3 +18,4 @@
     12. Use Git Bash syntax, not PowerShell. The project path contains spaces (OneDrive - DePaul University/...), so always quote it.
     13. On Windows the curses UI needs `pip install windows-curses` (once) and must be started as `winpty python main.py` in Git Bash; without winpty it fails with a "Redirection is not supported" style error.
     14. At the end of each session, append a short dated entry to history.md (the user's requests, the questions asked and answers given, and what changed).
+    15. Put layout math (where text goes on screen: wrapping, centering, sizes) in logic.py as pure functions that take the screen size, and test them; main.py only reads the screen size and draws at the positions logic.py returns.
