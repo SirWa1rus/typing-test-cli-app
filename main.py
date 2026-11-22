@@ -55,21 +55,23 @@ def option_row(options, selected):
 
 # --- Screens ---------------------------------------------------------------------
 
-def main_menu(stdscr):
-    """Standard/Custom choice. Returns "standard", "custom", or None for Esc."""
+def vertical_menu(stdscr, title, options, esc_hint):
+    """Draw a numbered vertical menu. Returns the chosen index, or None for Esc.
+
+    Arrows move, number keys jump to an option, Enter selects.
+    """
     stdscr.timeout(-1)
-    options = ["Standard typing test", "Custom typing test"]
     selected = 0
     while True:
         stdscr.erase()
         rows, _ = stdscr.getmaxyx()
         mid = rows // 2
-        centered(stdscr, mid - 3, "Typing Test", curses.A_BOLD)
+        centered(stdscr, mid - 3, title, curses.A_BOLD)
         for i, option in enumerate(options):
             label = f"{i + 1}. {option}"
             attr = curses.A_REVERSE if i == selected else curses.A_NORMAL
             centered(stdscr, mid - 1 + i, f" {label} ", attr)
-        centered(stdscr, rows - 1, "Arrows: move   Enter: select   Esc: quit", curses.A_DIM)
+        centered(stdscr, rows - 1, f"Arrows: move   Enter: select   Esc: {esc_hint}", curses.A_DIM)
         stdscr.refresh()
 
         key = stdscr.getch()
@@ -79,10 +81,24 @@ def main_menu(stdscr):
             selected = max(0, selected - 1)
         elif key in (curses.KEY_RIGHT, curses.KEY_DOWN):
             selected = min(len(options) - 1, selected + 1)
-        elif key in (ord("1"), ord("2")):
+        elif ord("1") <= key < ord("1") + len(options):
             selected = key - ord("1")
         elif key in ENTER_KEYS:
-            return ["standard", "custom"][selected]
+            return selected
+
+
+def main_menu(stdscr):
+    """Standard/Custom choice. Returns "standard", "custom", or None for Esc."""
+    choice = vertical_menu(stdscr, "Typing Test",
+                           ["Standard typing test", "Custom typing test"], "quit")
+    return None if choice is None else ["standard", "custom"][choice]
+
+
+def choose_difficulty(stdscr):
+    """Easy/Medium/Hard choice. Returns a logic difficulty, or None for Esc (back to menu)."""
+    labels = [d.capitalize() for d in logic.DIFFICULTIES]
+    choice = vertical_menu(stdscr, "Choose difficulty", labels, "back to menu")
+    return None if choice is None else logic.DIFFICULTIES[choice]
 
 
 def ask_custom_text(stdscr):
@@ -186,8 +202,11 @@ def run_test(stdscr, text):
     return wpm, logic.percent_beaten(wpm)
 
 
-def show_results(stdscr, wpm, percent):
-    """Show the score with a Retry/Menu/Quit menu. Returns "retry", "menu", or "quit"."""
+def show_results(stdscr, wpm, percent, difficulty=None):
+    """Show the score with a Retry/Menu/Quit menu. Returns "retry", "menu", or "quit".
+
+    `difficulty` is shown under the WPM for standard tests (None for custom tests).
+    """
     curses.flushinp()  # throw away keys typed as time ran out
     stdscr.timeout(-1)  # wait for keys normally again
     options = ["Retry", "Menu", "Quit"]
@@ -197,6 +216,8 @@ def show_results(stdscr, wpm, percent):
         rows, _ = stdscr.getmaxyx()
         mid = rows // 2
         centered(stdscr, mid - 3, f"{wpm:.0f} WPM", curses.A_BOLD)
+        if difficulty is not None:
+            centered(stdscr, mid - 2, f"Difficulty: {difficulty.capitalize()}", curses.A_DIM)
         centered(stdscr, mid - 1, f"You typed faster than {percent:.0f}% of people")
         centered(stdscr, mid + 2, option_row(options, selected))
         centered(stdscr, rows - 1, "Left/Right: move   Enter: select   Esc: quit", curses.A_DIM)
@@ -225,18 +246,26 @@ def app(stdscr):
         if mode is None:
             return
         custom_text = None
+        difficulty = None
         if mode == "custom":
             custom_text = ask_custom_text(stdscr)
             if custom_text is None:
                 continue  # Esc: back to the main menu
-        while True:  # Retry loop: same mode (and same custom text) each time
+        else:
+            difficulty = choose_difficulty(stdscr)
+            if difficulty is None:
+                continue  # Esc: back to the main menu
+        while True:  # Retry loop: same mode (custom text or difficulty) each time
             if not countdown(stdscr):
                 return
-            text = custom_text if custom_text is not None else logic.generate_text()
+            if custom_text is not None:
+                text = custom_text
+            else:
+                text = logic.generate_text(difficulty=difficulty)
             result = run_test(stdscr, text)
             if result is None:
                 return
-            choice = show_results(stdscr, *result)
+            choice = show_results(stdscr, *result, difficulty)
             if choice == "quit":
                 return
             if choice == "menu":
