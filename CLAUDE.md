@@ -19,3 +19,4 @@
     13. On Windows the curses UI needs `pip install windows-curses` (once) and must be started as `winpty python main.py` in Git Bash; without winpty it fails with a "Redirection is not supported" style error.
     14. At the end of each session, append a short dated entry to history.md (the user's requests, the questions asked and answers given, and what changed).
     15. Put layout math (where text goes on screen: wrapping, centering, sizes) in logic.py as pure functions that take the screen size, and test them; main.py only reads the screen size and draws at the positions logic.py returns.
+    16. Every selectable button (any menu option) gets the R5.1 white box: lay it out with logic.py (`vertical_menu_buttons()` or `button_row()`), move the hover with `logic.move_selection()`, and draw it with `main.draw_buttons()`. Text fields are not buttons and get no box.
