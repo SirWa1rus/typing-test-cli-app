@@ -102,3 +102,44 @@
 **User:** write arch-round-5.md for the next session (state, how to run, this round's decisions, unresolved items, warnings), and put standing rules in CLAUDE.md. Don't commit either file.
 
 **Agent:** Wrote `arch-round-5.md`. Added CLAUDE.md rule 16 (every selectable button uses the R5.1 layout functions and `draw_buttons()`) and rule 17 (when a round prompt approves an agent commit of a file, commit only that file). Nothing was committed.
+
+## 2026-11-22: Session 6, Round 6 (Claude Opus 5.5)
+
+**User:** start round 6. Use only the repository. Read problem.md, spec.md, CLAUDE.md, decisions/, and the newest handoff. List the Round 6 requirements and ask about anything unclear before coding. Update spec.md and commit it (approved), write tests named by requirement ID, implement until all tests pass, write at least one Y-statement decision record, and list every decision the user didn't ask for. Don't write the handoff, and never undo or amend a commit.
+
+**Agent:** Read the files (newest handoff: arch-round-5.md). Baseline: 90 tests passing. Listed the Round 6 requirement (a "Get ready" animation: a shaky 🚀 rotated to point up with a thick fire trail, streaking stars, a large slow purple and blue planet). Asked about the untagged ID, the rocket (a terminal can't rotate an emoji), its motion, and the planet. **User:** R6.1 for the whole bullet; then changed the requirement so the rocket flies up-right, the way the emoji points. Follow-up answers: edit problem.md to match; the rocket stays put while the world moves; the planet is centered behind it; ASCII fallback if the emoji fails.
+
+**Agent:** Committed spec.md (c96371e). Built the emoji rocket, fire trail, streaking stars, and drifting planet as pure functions in logic.py, drawn by main.py; 24 `test_R6_1_*` tests; decisions 0009 and 0010.
+
+**User (after running it, four rounds of changes):**
+
+1. Remove the black boxes behind characters, keep the planet still, fire as white/yellow/orange boxes. **Agent:** planet-colored backgrounds, box fire, still planet; decision 0011; spec committed (5a6bc7d).
+2. "Fire is green, rocket is now a star, make the planet look like Jupiter." The agent asked: green was a bug (it should be white/yellow/orange); the rocket showed as `*`; draw a box-art rocket; Jupiter's look in purple and blue. **Agent:** found the cause of the green (raw color 11 is bright cyan in Windows' color order) and switched to curses color names + 8; drew a box pixel-art rocket; made the planet Jupiter-style (wavy bands, Great Spot); decision 0012; spec committed (597334b).
+3. Scrap the fire and use the emoji (the box rocket didn't appear). **Agent:** did so; gave the user an emoji/box check script (not run); spec committed (4c424d1).
+4. Scrap the rocket and the moving stars; make the stars twinkle. **Agent:** stars stay in place and twinkle (gray `.` -> white `+` -> bold `*`), hidden behind the planet; found that `A_DIM` is 0 on Windows, so dim stars are gray; rewrote decision 0009 (renamed to 0009-twinkling-stars-instead-of-a-rocket.md) and updated 0010-0012; spec committed (0ea0320).
+
+**User:** remove the tests for removed features. **Agent:** deleted the leftover guard test (`test_R6_1_no_rocket_and_no_fire`); 109 tests pass.
+
+**User:** do the R6 tests test logic or UI? (no edits) **Agent:** logic only: they check the data logic.py returns (positions, characters, color names), never main.py or what the terminal shows. **User:** would they fail if the code failed? **Agent:** ran a mutation test on a scratch copy: 8 of 10 deliberate logic.py bugs were caught (missed: `*` labeled dim, twinkle too fast); 0 of 4 main.py bugs were caught, even a syntax error, because the tests never import main.py. The user decided not to add tests.
+
+The user committed problem.md (19bd1b9, shortened R6.1), the code and tests (2d8233c), and decisions 0009-0012 (5a5bc42).
+
+## 2026-11-22: Session 6, continued (handoff)
+
+**User:** write arch-round-6.md for the next session (state, how to run, this round's decisions and why, unresolved items, warnings), and put standing rules in CLAUDE.md. Don't commit either file.
+
+**Agent:** Wrote `arch-round-6.md`. Added CLAUDE.md rules 17 (pick colors by curses name, + 8 for bright, never raw numbers), 18 (plain ASCII only on screen; `A_DIM` does nothing on Windows), and 19 (animations as pure functions of the frame number; the tests never import main.py, so ask the user to run and look after UI changes). Appended this history entry. Nothing was committed.
+
+## 2026-11-22: Session 6, continued (R6.2: brackets instead of the white box)
+
+**User:** reread problem.md and implement the new change; update the old behavior's tests, explain the change in a Y-statement decision record, keep every R6 file consistent (arch-round-6.md, spec.md, ...), and commit everything in small steps, except history.md.
+
+**Agent:** At first found no change (the edit wasn't saved yet); on "check again", found the new bullet: "change white boxes to be brackets to indicate which option I have selected (changes requirement R5.1)". Asked three questions:
+
+1. ID? **User:** R6.2, tagged in problem.md.
+2. Look? **User:** `[ Retry ]` (square brackets, a space inside).
+3. Where? **User:** all three menus, brackets only (the white box removed completely).
+
+**Agent:** `logic.button_labels(options, selected)` now builds the brackets into the text (selected `[ Retry ]`, others `  Retry  `, all longest + 4 wide, closing bracket right after the text); `main.py` lost the white box (`HIGHLIGHT`, `highlight_attr()`, `BRIGHT_WHITE`). Replaced the four R5.1 white-box tests with nine `test_R6_2_*` tests (114 pass). Added decision 0013 (Y-statement), marked 0007 superseded and 0008 amended, fixed 0012; updated spec.md, CLAUDE.md rule 16, and arch-round-6.md. Commits: 1745022 (problem.md), dc33494 (spec.md), 66e6075 (logic + tests), e3dae05 (main.py), 119eb09 (decisions), 1d4421a (CLAUDE.md, incl. rules 17-19), ceb464a (arch-round-6.md + 0012). history.md left for the user to commit.
+
+**User:** remove rules 17 and 18 from CLAUDE.md and every mention of them in arch-round-6.md; commit, then commit history.md. **Agent:** deleted rule 17 (colors by curses name) and rule 18 (ASCII only, no A_DIM), renumbered the animations rule from 19 to 17, removed the rule references from the handoff (keeping the facts as Round 6 lessons), and committed (8aeb272). Then committed history.md.
