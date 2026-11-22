@@ -34,3 +34,7 @@
 # Round 5 requirements
 
     -   white box behind all selectable buttons to indicate the option I am currently hovering over (R5.1)
+
+# Round 6 requirements
+
+    -   add an animation to the get ready screen displaying a shaky rocket flying straight up with a thick fire trail (mix white, orange, yellow, and red colors for this); for the rocket sprite, use this emoji --> "🚀", and make sure it is rotated to point up. For the animation background, add streaking stars indicating the rocket is traveling, and also add a very large purple and blue planet in the background that barely moves to indicate that the rocket is far away
