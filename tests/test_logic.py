@@ -359,5 +359,89 @@ class HardTextTests(unittest.TestCase):
         self.assertEqual(t.correct_count(), len(self.text))
 
 
+class ZoomTipTests(unittest.TestCase):
+    def test_R4_1_full_tip_explains_ctrl_zoom_on_wide_screen(self):
+        tip = logic.zoom_tip(200)
+        self.assertEqual(tip, logic.ZOOM_TIP)
+        self.assertIn("Ctrl", tip)
+        self.assertIn("bigger", tip)
+
+    def test_R4_1_short_tip_on_narrow_screen(self):
+        tip = logic.zoom_tip(len(logic.ZOOM_TIP) - 1)
+        self.assertEqual(tip, logic.ZOOM_TIP_SHORT)
+        self.assertIn("Ctrl", tip)
+
+    def test_R4_1_no_tip_when_nothing_fits(self):
+        self.assertEqual(logic.zoom_tip(len(logic.ZOOM_TIP_SHORT) - 1), "")
+        self.assertEqual(logic.zoom_tip(0), "")
+
+    def test_R4_1_tip_never_wider_than_screen(self):
+        for width in range(0, 120):
+            self.assertLessEqual(len(logic.zoom_tip(width)), width)
+
+
+TEXT = logic.generate_text(60, random.Random(4))
+
+
+def rows_of(positions):
+    """Group (row, col) positions by row: {row: [cols...]}."""
+    rows = {}
+    for r, c in positions:
+        rows.setdefault(r, []).append(c)
+    return rows
+
+
+class CenteredPositionsTests(unittest.TestCase):
+    def test_R4_2_one_position_per_character(self):
+        self.assertEqual(len(logic.centered_positions(TEXT, 100, 30)), len(TEXT))
+
+    def test_R4_2_same_layout_as_wrap_just_shifted(self):
+        pos = logic.centered_positions(TEXT, 100, 30)
+        wrapped = logic.wrap_positions(TEXT, logic.TEXT_MAX_WIDTH)
+        dr, dc = pos[0][0] - wrapped[0][0], pos[0][1] - wrapped[0][1]
+        self.assertEqual(pos, [(r + dr, c + dc) for r, c in wrapped])
+
+    def test_R4_2_every_line_starts_at_same_column(self):
+        starts = {min(cols) for cols in rows_of(logic.centered_positions(TEXT, 100, 30)).values()}
+        self.assertEqual(len(starts), 1)
+
+    def test_R4_2_horizontally_centered(self):
+        for cols in (40, 61, 80, 100, 101, 200):
+            pos = logic.centered_positions(TEXT, cols, 30)
+            left = min(c for _, c in pos)
+            right = cols - 1 - max(c for _, c in pos)
+            self.assertLessEqual(abs(left - right), 1, f"screen width {cols}")
+
+    def test_R4_2_lines_capped_at_max_width_on_wide_screen(self):
+        widths = [max(c) - min(c) + 1 for c in rows_of(logic.centered_positions(TEXT, 300, 30)).values()]
+        self.assertLessEqual(max(widths), logic.TEXT_MAX_WIDTH)
+
+    def test_R4_2_fits_inside_narrow_screen_with_margins(self):
+        cols = 30
+        pos = logic.centered_positions(TEXT, cols, 60)
+        self.assertGreaterEqual(min(c for _, c in pos), logic.SIDE_MARGIN)
+        self.assertLessEqual(max(c for _, c in pos), cols - 1 - logic.SIDE_MARGIN)
+
+    def test_R4_2_vertically_centered(self):
+        screen_rows = 40
+        pos = logic.centered_positions(TEXT, 100, screen_rows)
+        top = min(r for r, _ in pos)
+        bottom_gap = screen_rows - 1 - max(r for r, _ in pos)
+        self.assertLessEqual(abs(top - bottom_gap), 1)
+
+    def test_R4_2_never_above_title_and_timer(self):
+        pos = logic.centered_positions(TEXT, 100, 5)  # very short screen
+        self.assertEqual(min(r for r, _ in pos), logic.TEXT_TOP)
+
+    def test_R4_2_short_text_centered_by_its_own_width(self):
+        text = "short words"
+        pos = logic.centered_positions(text, 81, 30)
+        self.assertEqual(pos[0][1], (81 - len(text)) // 2)
+        self.assertEqual({r for r, _ in pos}, {(30 - 1) // 2})
+
+    def test_R4_2_empty_text_gives_no_positions(self):
+        self.assertEqual(logic.centered_positions("", 80, 24), [])
+
+
 if __name__ == "__main__":
     unittest.main()
