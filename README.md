@@ -1,6 +1,6 @@
 # What the program does
 
-This program lets users take a typing test and learn how fast they can type and where they score compared to other people.
+This program lets users either take a standard 45-second typing test with three difficulties (easy, medium, hard) or input a .txt file (containing keys found on any standard keyboard) and use that as the typing test.
 
 # Commands to Run
 
