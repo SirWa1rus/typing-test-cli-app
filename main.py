@@ -23,11 +23,10 @@ ENTER_KEYS = {curses.KEY_ENTER, 10, 13, 459}  # 459 = keypad Enter on Windows
 LEFT_MARGIN = 2
 
 # Color pair numbers (set up in init_colors)
-GREEN, RED, GREEN_BOX, RED_BOX, HIGHLIGHT = 1, 2, 3, 4, 5
+GREEN, RED, GREEN_BOX, RED_BOX = 1, 2, 3, 4
+# Pair 5 was the R5.1 white box, removed in R6.2 (buttons use [ ] brackets now).
 # R6.1 animation colors are numbered from here on (see init_animation_colors).
 FIRST_ANIMATION_PAIR = 6
-
-BRIGHT_WHITE = 15  # color 7 (COLOR_WHITE) is often light gray; 15 is true white
 
 # Animation color name (from logic.Cell.color) -> curses attribute, and planet
 # color name -> "white on that color" for things drawn over the planet. Filled
@@ -98,15 +97,7 @@ def init_colors():
     curses.init_pair(RED, curses.COLOR_RED, -1)
     curses.init_pair(GREEN_BOX, curses.COLOR_BLACK, curses.COLOR_GREEN)
     curses.init_pair(RED_BOX, curses.COLOR_BLACK, curses.COLOR_RED)
-    # R5.1: black text on a white box for the button the user is on.
-    white = BRIGHT_WHITE if curses.COLORS > BRIGHT_WHITE else curses.COLOR_WHITE
-    curses.init_pair(HIGHLIGHT, curses.COLOR_BLACK, white)
     init_animation_colors()
-
-
-def highlight_attr():
-    """The white-box style (R5.1); reverse video if the terminal has no colors."""
-    return curses.color_pair(HIGHLIGHT) if curses.has_colors() else curses.A_REVERSE
 
 
 def safe_addstr(win, row, col, text, attr=0):
@@ -140,9 +131,13 @@ def handle_resize(key):
 
 
 def draw_buttons(win, buttons):
-    """Draw logic.Button objects; the selected one gets the white box (R5.1)."""
+    """Draw logic.Button objects as plain text (R5.1).
+
+    Since R6.2 the selected button is marked by the [ ] brackets that
+    logic.button_labels() puts in its text, so there is no box or highlight.
+    """
     for b in buttons:
-        safe_addstr(win, b.row, b.col, b.text, highlight_attr() if b.selected else curses.A_NORMAL)
+        safe_addstr(win, b.row, b.col, b.text)
 
 
 # --- Screens ---------------------------------------------------------------------
