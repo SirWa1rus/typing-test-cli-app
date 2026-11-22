@@ -8,11 +8,11 @@
             -   history.md: a history of all chat messages between the user and the agent
             -   spec.md: program description + list of features
 
-    5.  Handoff files are named arch-round-<#>.md. Write one only when the user asks. At the start of a round, read the newest one (it replaces older ones such as arch-round-1.md as the current handoff).
+    5.  Handoff files are named handoff-round-<#>.md. Write one only when the user asks. At the start of a round, read the newest one (it replaces older ones such as handoff-round-1.md as the current handoff).
     6.  Build only tests for the project's logic
     7.  Interview the user for any missing information from the spec.md file during program development.
     8.  Every test name starts with the unique ID of the requirement it checks, as tagged in problem.md: R<round>.<n> (e.g. R2.1 = Round 2, bullet 1). Python names can't contain dots, so R2.1 is written test_R2_1_...
-    9.  Record design decisions that had real alternatives in decisions/ as Y-statements, in files numbered 0001-..., 0002-..., and so on.
+    9.  Record design decisions that had real alternatives in docs/decisions/ as Y-statements, in files numbered 0001-..., 0002-..., and so on.
     10. Keep logic.py free of curses/UI code so it stays fully unit-testable; main.py is UI only.
     11. Read-only git commands (git status, git log, git diff) are fine without asking. Never stage files (git add) either; that is part of committing.
     12. Use Git Bash syntax, not PowerShell. The project path contains spaces (OneDrive - DePaul University/...), so always quote it.
