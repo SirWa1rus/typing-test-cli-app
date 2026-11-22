@@ -6,6 +6,7 @@ can be tested with plain unit tests, without opening a terminal window.
 
 import os
 import random
+from collections import namedtuple
 from statistics import NormalDist
 
 # --- Settings -----------------------------------------------------------------
@@ -35,6 +36,9 @@ TEXT_TOP = 3            # first screen row the text may use (rows 0-2: title and
 # to zoom instead (works in Git Bash/mintty and Windows Terminal) (R4.1).
 ZOOM_TIP = "Tip: hold Ctrl and scroll the mouse wheel (or press Ctrl+= / Ctrl+-) to make the text bigger"
 ZOOM_TIP_SHORT = "Ctrl+scroll: bigger text"
+
+# Selectable buttons (R5.1).
+BUTTON_GAP = 3          # empty columns between buttons in a left-to-right row
 
 # Short, common words for an "easy" test.
 EASY_WORDS = [
@@ -335,3 +339,51 @@ def centered_positions(text, screen_cols, screen_rows):
     left = max(0, (screen_cols - block_width) // 2)
     top = max(TEXT_TOP, (screen_rows - block_height) // 2)
     return [(top + row, left + col) for row, col in positions]
+
+
+# --- Selectable buttons (R5.1) -------------------------------------------------
+
+# One button on screen: where to draw it, its padded text, and whether it is the
+# option the user is on (main.py draws that one with a white box behind it).
+Button = namedtuple("Button", ["row", "col", "text", "selected"])
+
+
+def button_labels(options):
+    """Pad every option to the same width: one space, the text, then spaces.
+
+    Every box in a menu is then the same size, so the white box doesn't grow
+    or shrink as the user moves between options.
+    """
+    width = max(len(o) for o in options) + 2
+    return [f" {o}".ljust(width) for o in options]
+
+
+def move_selection(selected, step, count):
+    """Move the hovered option by `step` (-1 or +1), stopping at the first/last."""
+    return max(0, min(count - 1, selected + step))
+
+
+def vertical_menu_buttons(options, selected, screen_cols, screen_rows):
+    """Lay out a top-to-bottom menu, centered left-to-right.
+
+    The first option goes one row above the middle of the screen, the rest on
+    the rows below it. Returns one Button per option.
+    """
+    labels = button_labels(options)
+    col = max(0, (screen_cols - len(labels[0])) // 2)
+    first_row = screen_rows // 2 - 1
+    return [Button(first_row + i, col, label, i == selected)
+            for i, label in enumerate(labels)]
+
+
+def button_row(options, selected, screen_cols, row):
+    """Lay out a left-to-right row of buttons (BUTTON_GAP apart), centered.
+
+    Returns one Button per option.
+    """
+    labels = button_labels(options)
+    width = len(labels[0])
+    total = len(labels) * width + (len(labels) - 1) * BUTTON_GAP
+    left = max(0, (screen_cols - total) // 2)
+    return [Button(row, left + i * (width + BUTTON_GAP), label, i == selected)
+            for i, label in enumerate(labels)]

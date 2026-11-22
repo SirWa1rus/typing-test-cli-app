@@ -23,7 +23,9 @@ ENTER_KEYS = {curses.KEY_ENTER, 10, 13, 459}  # 459 = keypad Enter on Windows
 LEFT_MARGIN = 2
 
 # Color pair numbers (set up in init_colors)
-GREEN, RED, GREEN_BOX, RED_BOX = 1, 2, 3, 4
+GREEN, RED, GREEN_BOX, RED_BOX, HIGHLIGHT = 1, 2, 3, 4, 5
+
+BRIGHT_WHITE = 15  # color 7 (COLOR_WHITE) is often light gray; 15 is true white
 
 
 def init_colors():
@@ -33,6 +35,14 @@ def init_colors():
     curses.init_pair(RED, curses.COLOR_RED, -1)
     curses.init_pair(GREEN_BOX, curses.COLOR_BLACK, curses.COLOR_GREEN)
     curses.init_pair(RED_BOX, curses.COLOR_BLACK, curses.COLOR_RED)
+    # R5.1: black text on a white box for the button the user is on.
+    white = BRIGHT_WHITE if curses.COLORS > BRIGHT_WHITE else curses.COLOR_WHITE
+    curses.init_pair(HIGHLIGHT, curses.COLOR_BLACK, white)
+
+
+def highlight_attr():
+    """The white-box style (R5.1); reverse video if the terminal has no colors."""
+    return curses.color_pair(HIGHLIGHT) if curses.has_colors() else curses.A_REVERSE
 
 
 def safe_addstr(win, row, col, text, attr=0):
@@ -65,9 +75,10 @@ def handle_resize(key):
     return True
 
 
-def option_row(options, selected):
-    """Draw a horizontal menu like:   Retry   [ Menu ]   Quit"""
-    return "   ".join(f"[ {o} ]" if i == selected else f"  {o}  " for i, o in enumerate(options))
+def draw_buttons(win, buttons):
+    """Draw logic.Button objects; the selected one gets the white box (R5.1)."""
+    for b in buttons:
+        safe_addstr(win, b.row, b.col, b.text, highlight_attr() if b.selected else curses.A_NORMAL)
 
 
 # --- Screens ---------------------------------------------------------------------
@@ -79,15 +90,12 @@ def vertical_menu(stdscr, title, options, esc_hint):
     """
     stdscr.timeout(-1)
     selected = 0
+    labels = [f"{i + 1}. {option}" for i, option in enumerate(options)]
     while True:
         stdscr.erase()
-        rows, _ = stdscr.getmaxyx()
-        mid = rows // 2
-        centered(stdscr, mid - 3, title, curses.A_BOLD)
-        for i, option in enumerate(options):
-            label = f"{i + 1}. {option}"
-            attr = curses.A_REVERSE if i == selected else curses.A_NORMAL
-            centered(stdscr, mid - 1 + i, f" {label} ", attr)
+        rows, cols = stdscr.getmaxyx()
+        centered(stdscr, rows // 2 - 3, title, curses.A_BOLD)
+        draw_buttons(stdscr, logic.vertical_menu_buttons(labels, selected, cols, rows))
         centered(stdscr, rows - 1, f"Arrows: move   Enter: select   Esc: {esc_hint}", curses.A_DIM)
         stdscr.refresh()
 
@@ -95,9 +103,9 @@ def vertical_menu(stdscr, title, options, esc_hint):
         if key == KEY_ESC:
             return None
         if key in (curses.KEY_LEFT, curses.KEY_UP):
-            selected = max(0, selected - 1)
+            selected = logic.move_selection(selected, -1, len(options))
         elif key in (curses.KEY_RIGHT, curses.KEY_DOWN):
-            selected = min(len(options) - 1, selected + 1)
+            selected = logic.move_selection(selected, 1, len(options))
         elif ord("1") <= key < ord("1") + len(options):
             selected = key - ord("1")
         elif key in ENTER_KEYS:
@@ -236,13 +244,13 @@ def show_results(stdscr, wpm, percent, difficulty=None):
     selected = 0
     while True:
         stdscr.erase()
-        rows, _ = stdscr.getmaxyx()
+        rows, cols = stdscr.getmaxyx()
         mid = rows // 2
         centered(stdscr, mid - 3, f"{wpm:.0f} WPM", curses.A_BOLD)
         if difficulty is not None:
             centered(stdscr, mid - 2, f"Difficulty: {difficulty.capitalize()}", curses.A_DIM)
         centered(stdscr, mid - 1, f"You typed faster than {percent:.0f}% of people")
-        centered(stdscr, mid + 2, option_row(options, selected))
+        draw_buttons(stdscr, logic.button_row(options, selected, cols, mid + 2))
         centered(stdscr, rows - 1, "Left/Right: move   Enter: select   Esc: quit", curses.A_DIM)
         stdscr.refresh()
 
@@ -250,9 +258,9 @@ def show_results(stdscr, wpm, percent, difficulty=None):
         if key == KEY_ESC:
             return "quit"
         if key == curses.KEY_LEFT:
-            selected = max(0, selected - 1)
+            selected = logic.move_selection(selected, -1, len(options))
         elif key == curses.KEY_RIGHT:
-            selected = min(len(options) - 1, selected + 1)
+            selected = logic.move_selection(selected, 1, len(options))
         elif key in ENTER_KEYS:
             return options[selected].lower()
 
