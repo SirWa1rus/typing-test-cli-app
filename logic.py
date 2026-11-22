@@ -342,21 +342,34 @@ def centered_positions(text, screen_cols, screen_rows):
     return [(top + row, left + col) for row, col in positions]
 
 
-# --- Selectable buttons (R5.1) -------------------------------------------------
+# --- Selectable buttons (R5.1, marked with brackets since R6.2) ----------------
 
-# One button on screen: where to draw it, its padded text, and whether it is the
-# option the user is on (main.py draws that one with a white box behind it).
+# One button on screen: where to draw it, its text (brackets included), and
+# whether it is the option the user is on.
 Button = namedtuple("Button", ["row", "col", "text", "selected"])
 
+BRACKET_OPEN = "[ "      # R6.2: these surround the option the user is on...
+BRACKET_CLOSE = " ]"
+NO_BRACKET = "  "        # ...and the other options get spaces in the same places
 
-def button_labels(options):
-    """Pad every option to the same width: one space, the text, then spaces.
 
-    Every box in a menu is then the same size, so the white box doesn't grow
-    or shrink as the user moves between options.
+def button_labels(options, selected):
+    """Each option's text, with [ ] brackets around the `selected` one (R6.2).
+
+    The selected option becomes "[ Retry ]"; the others get spaces where the
+    brackets would be. Every label is padded to the same width (the longest
+    option + 4), so only the brackets move as the user moves; the option text
+    never shifts.
     """
-    width = max(len(o) for o in options) + 2
-    return [f" {o}".ljust(width) for o in options]
+    width = max(len(o) for o in options) + len(BRACKET_OPEN) + len(BRACKET_CLOSE)
+    labels = []
+    for i, option in enumerate(options):
+        if i == selected:
+            label = BRACKET_OPEN + option + BRACKET_CLOSE
+        else:
+            label = NO_BRACKET + option
+        labels.append(label.ljust(width))
+    return labels
 
 
 def move_selection(selected, step, count):
@@ -370,7 +383,7 @@ def vertical_menu_buttons(options, selected, screen_cols, screen_rows):
     The first option goes one row above the middle of the screen, the rest on
     the rows below it. Returns one Button per option.
     """
-    labels = button_labels(options)
+    labels = button_labels(options, selected)
     col = max(0, (screen_cols - len(labels[0])) // 2)
     first_row = screen_rows // 2 - 1
     return [Button(first_row + i, col, label, i == selected)
@@ -382,7 +395,7 @@ def button_row(options, selected, screen_cols, row):
 
     Returns one Button per option.
     """
-    labels = button_labels(options)
+    labels = button_labels(options, selected)
     width = len(labels[0])
     total = len(labels) * width + (len(labels) - 1) * BUTTON_GAP
     left = max(0, (screen_cols - total) // 2)

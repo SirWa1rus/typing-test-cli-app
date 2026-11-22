@@ -444,35 +444,21 @@ class CenteredPositionsTests(unittest.TestCase):
 
 
 class ButtonHighlightTests(unittest.TestCase):
-    """R5.1: a white box behind the selectable button the user is on.
+    """R5.1: mark the selectable button the user is on.
 
-    The drawing (the white color) is in main.py; these tests check the layout
-    math in logic.py: which button is marked as selected, and where each
-    button and its box go.
+    R6.2 changed the mark from a white box to [ ] brackets (see
+    ButtonBracketTests). These tests check the layout that stayed the same:
+    which button is selected, and where each button goes.
     """
 
     MENU = ["Standard typing test", "Custom typing test"]
     ROW = ["Retry", "Menu", "Quit"]
-
-    def test_R5_1_labels_padded_to_same_width(self):
-        labels = logic.button_labels(self.MENU)
-        widths = {len(label) for label in labels}
-        self.assertEqual(widths, {len("Standard typing test") + 2})
-
-    def test_R5_1_label_has_one_space_before_text(self):
-        for label, option in zip(logic.button_labels(self.ROW), self.ROW):
-            self.assertTrue(label.startswith(" " + option))
 
     def test_R5_1_vertical_exactly_the_hovered_button_selected(self):
         for hovered in range(len(self.MENU)):
             buttons = logic.vertical_menu_buttons(self.MENU, hovered, 80, 24)
             self.assertEqual([b.selected for b in buttons],
                              [i == hovered for i in range(len(self.MENU))])
-
-    def test_R5_1_vertical_box_keeps_size_and_column(self):
-        buttons = logic.vertical_menu_buttons(self.MENU, 0, 80, 24)
-        self.assertEqual(len({b.col for b in buttons}), 1)
-        self.assertEqual(len({len(b.text) for b in buttons}), 1)
 
     def test_R5_1_vertical_buttons_on_consecutive_rows_below_middle(self):
         options = ["Easy", "Medium", "Hard"]
@@ -495,11 +481,6 @@ class ButtonHighlightTests(unittest.TestCase):
             buttons = logic.button_row(self.ROW, hovered, 80, 12)
             self.assertEqual([b.selected for b in buttons],
                              [i == hovered for i in range(len(self.ROW))])
-
-    def test_R5_1_row_has_no_brackets(self):
-        for b in logic.button_row(self.ROW, 1, 80, 12):
-            self.assertNotIn("[", b.text)
-            self.assertNotIn("]", b.text)
 
     def test_R5_1_row_buttons_same_width_left_to_right_with_gap(self):
         buttons = logic.button_row(self.ROW, 0, 80, 12)
@@ -532,6 +513,68 @@ class ButtonHighlightTests(unittest.TestCase):
     def test_R5_1_move_selection_stops_at_ends(self):
         self.assertEqual(logic.move_selection(0, -1, 3), 0)
         self.assertEqual(logic.move_selection(2, 1, 3), 2)
+
+
+class ButtonBracketTests(unittest.TestCase):
+    """R6.2: [ ] brackets, not a white box, mark the option the user is on.
+
+    These replace the R5.1 tests that checked the white-box layout (labels
+    padded with one space, no brackets on the results row).
+    """
+
+    MENU = ["Standard typing test", "Custom typing test"]
+    ROW = ["Retry", "Menu", "Quit"]
+
+    def test_R6_2_selected_label_has_brackets_with_a_space_inside(self):
+        labels = logic.button_labels(self.ROW, 0)
+        self.assertEqual(labels[0].rstrip(), "[ Retry ]")
+
+    def test_R6_2_other_labels_have_spaces_where_brackets_go(self):
+        labels = logic.button_labels(self.ROW, 0)
+        for label, option in zip(labels[1:], self.ROW[1:]):
+            self.assertTrue(label.startswith("  " + option))
+            self.assertNotIn("[", label)
+            self.assertNotIn("]", label)
+
+    def test_R6_2_closing_bracket_right_after_text(self):
+        labels = logic.button_labels(self.ROW, 1)  # "Menu" is shorter than "Retry"
+        self.assertTrue(labels[1].startswith("[ Menu ]"))
+
+    def test_R6_2_labels_same_width_longest_plus_four(self):
+        for selected in range(len(self.MENU)):
+            widths = {len(label) for label in logic.button_labels(self.MENU, selected)}
+            self.assertEqual(widths, {len("Standard typing test") + 4})
+
+    def test_R6_2_exactly_one_label_has_brackets(self):
+        for selected in range(len(self.ROW)):
+            labels = logic.button_labels(self.ROW, selected)
+            self.assertEqual([("[" in l) for l in labels],
+                             [i == selected for i in range(len(self.ROW))])
+
+    def test_R6_2_vertical_brackets_follow_the_hover(self):
+        for hovered in range(len(self.MENU)):
+            buttons = logic.vertical_menu_buttons(self.MENU, hovered, 80, 24)
+            for i, b in enumerate(buttons):
+                self.assertEqual(b.text.startswith("[ "), i == hovered)
+
+    def test_R6_2_row_brackets_follow_the_hover(self):
+        for hovered in range(len(self.ROW)):
+            buttons = logic.button_row(self.ROW, hovered, 80, 12)
+            for i, b in enumerate(buttons):
+                self.assertEqual(b.text.startswith("[ "), i == hovered)
+
+    def test_R6_2_vertical_buttons_keep_size_and_column(self):
+        for hovered in range(len(self.MENU)):
+            buttons = logic.vertical_menu_buttons(self.MENU, hovered, 80, 24)
+            self.assertEqual(len({b.col for b in buttons}), 1)
+            self.assertEqual(len({len(b.text) for b in buttons}), 1)
+
+    def test_R6_2_option_text_never_shifts_when_hover_moves(self):
+        def text_cols(hovered):
+            return [b.col + b.text.index(option) for b, option in
+                    zip(logic.button_row(self.ROW, hovered, 80, 12), self.ROW)]
+        self.assertEqual(text_cols(0), text_cols(1))
+        self.assertEqual(text_cols(1), text_cols(2))
 
 
 class GetReadyAnimationTests(unittest.TestCase):
