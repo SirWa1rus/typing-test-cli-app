@@ -37,4 +37,4 @@
 
 # Round 6 requirements
 
-    -   add an animation to the get ready screen displaying a shaky rocket flying straight up with a thick fire trail (mix white, orange, yellow, and red colors for this); for the rocket sprite, use this emoji --> "🚀", and make sure it is rotated to point up. For the animation background, add streaking stars indicating the rocket is traveling, and also add a very large purple and blue planet in the background that barely moves to indicate that the rocket is far away
+    -   add an animation to the get ready screen: stars in the background that stay in place and twinkle, and a very large purple and blue planet designed to look like Jupiter (R6.1)
