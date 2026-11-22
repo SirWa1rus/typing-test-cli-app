@@ -38,3 +38,4 @@
 # Round 6 requirements
 
     -   add an animation to the get ready screen: stars in the background that stay in place and twinkle, and a very large purple and blue planet designed to look like Jupiter (R6.1)
+    -   change white boxes to be brackets to indicate which option I have selected (changes requirement R5.1) (R6.2)
