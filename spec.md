@@ -39,25 +39,20 @@
     "Get ready" screen (the 5-second countdown before every test, standard and custom):
 
         -   An animation plays for the whole countdown, about 20 frames per second
-        -   Rocket: the 🚀 emoji, drawn as it is (a terminal cannot rotate a
-            character, so it points up and to the right, as the font draws it).
-            The rocket flies in that direction: up and to the right
-        -   The rocket stays near the middle of the screen and shakes a little
-            (one column or row each frame); the world moving past it shows the flight
-        -   No fire trail
-        -   Stars: streaking stars move down and to the left past the rocket, each
-            with a short tail, so the rocket looks like it is moving fast
+        -   Stars: scattered stars that stay in place and twinkle. Each one cycles
+            dim gray "." -> white "+" -> bright white "*" -> back, at its own speed
+            and starting point, so they don't all blink together. The same star
+            pattern appears every countdown
         -   Planet: a very large planet designed to look like Jupiter, in shades of
-            purple and blue, centered behind the rocket. It has many thin bands whose
+            purple and blue, centered on the screen. It has many thin bands whose
             edges wave up and down, and a big oval "Great Spot" (a bright purple core
             with a dark purple rim) below the middle, right of center. It stays still
-            in the center (it is far away)
-        -   Drawn back to front: planet, stars, rocket, then the text
-        -   No black boxes: anything drawn on top of the planet (stars, the rocket,
-            the text) has the planet's color behind it instead of the terminal's
-            background color
+        -   The stars are behind the planet (hidden where it covers them)
+        -   No rocket, no fire trail, no moving stars
+        -   No black boxes: text drawn on top of the planet has the planet's color
+            behind it instead of the terminal's background color
         -   Text: "Get ready..." and the countdown number at the top, the zoom tip
-            and "Esc: quit" at the bottom, so they never cover the rocket
+            and "Esc: quit" at the bottom
         -   Terminals with fewer than 256 colors use the closest ones (the purple
             shades become magenta, the blue shades blue)
 
