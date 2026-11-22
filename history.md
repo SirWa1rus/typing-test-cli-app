@@ -47,3 +47,20 @@
 **Agent:** Renamed the tests to `test_R1_1_` (14), `test_R1_2_` (2), `test_R1_3_` (3), and `test_R2_1_` (25); all 44 pass. Updated CLAUDE.md rule 8, the test names in decision 0001, the arch.md references in CLAUDE.md and arch-round-2.md, and the handoff's warnings and decisions. Earlier history entries still say "arch.md" because that was the file's name at the time.
 
 **User:** the custom-file and difficulty bullets under Round 1 in problem.md had been pasted in by accident (now removed); add the unique IDs to problem.md and fix the handoff and rule 8. **Agent:** Tagged problem.md bullets R1.1, R1.2, R1.3, and R2.1. Simplified CLAUDE.md rule 8 to "the ID as tagged in problem.md". Removed the outdated R1.4 and duplicate-bullet notes from arch-round-2.md, and added a warning that difficulty is no longer in problem.md.
+
+## 2026-11-21: Session 3, Round 3 (Claude Opus 5.5)
+
+**User:** start round 3. Use only the repository. Read problem.md, spec.md, CLAUDE.md, decisions/, and the newest handoff. List the Round 3 requirements and ask about anything unclear before coding. Update spec.md, write tests named by requirement ID, implement until all tests pass, write at least one Y-statement decision record, and list every decision the user didn't ask for. Don't write the handoff, and never undo or amend a commit.
+
+**Agent:** Read the files (newest handoff: arch-round-2.md). Baseline: 44 tests passing. Listed the one Round 3 requirement, medium and hard difficulty for the standard test (R3.1), and asked four questions:
+
+1. What makes Medium and Hard harder? **User:** words + punctuation (Medium: longer, less common lowercase words; Hard: long words plus capitals, punctuation, and numbers).
+2. How is the difficulty chosen? **User:** a submenu after Standard (Easy / Medium / Hard).
+3. Should the percentile change with the difficulty? **User:** no, the same scale for all.
+4. Retry, and should results show the difficulty? **User:** Retry keeps the same level with new words, and the results screen shows the level.
+
+**Agent:** Updated spec.md. Added 17 `test_R3_1_*` tests (61 total, all passing). Added `MEDIUM_WORDS`, `HARD_WORDS`, `EASY`/`MEDIUM`/`HARD`/`DIFFICULTIES`, a `difficulty` parameter on `generate_text()` (default easy), and `_hard_text()` to `logic.py`. Added `vertical_menu()` and `choose_difficulty()` to `main.py`, and a difficulty line on the results screen. Wrote `decisions/0003` (how hard text is built) and `decisions/0004` (submenu + parameter). No handoff written.
+
+**User:** write arch-round-3.md for the next session (state, how to run, this round's decisions, unresolved items, warnings), and put standing rules in CLAUDE.md. Don't commit either file.
+
+**Agent:** Wrote `arch-round-3.md`. Moved four standing rules from the old handoff warnings into CLAUDE.md as rules 11-14: read-only git is fine and never stage, use Git Bash with the path quoted, windows-curses + winpty, and append to history.md each session. Nothing was committed.
