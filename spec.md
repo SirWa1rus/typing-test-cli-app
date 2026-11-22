@@ -46,14 +46,17 @@
             (one column or row each frame); the world moving past it shows the flight
         -   If the terminal cannot draw the emoji, a small ASCII rocket is drawn instead
         -   Fire trail: a thick trail streams out behind the rocket, down and to the
-            left, and gets thinner farther away. It flickers, mixing white, yellow,
-            orange, and red: hottest (white/yellow) next to the rocket, red at the end
+            left, and gets thinner farther away. It is made of solid filled boxes
+            (no characters) that flicker, mixing white, yellow, and orange:
+            hottest (white/yellow) next to the rocket, orange at the end
         -   Stars: streaking stars move down and to the left past the rocket, each
             with a short tail, so the rocket looks like it is moving fast
-        -   Planet: a very large purple and blue planet, centered behind the rocket,
-            that drifts down and to the left very slowly (a few cells over the whole
-            countdown), so it looks far away
+        -   Planet: a very large purple and blue planet, centered behind the rocket.
+            It stays still in the center (it is far away)
         -   Drawn back to front: planet, stars, fire trail, rocket, then the text
+        -   No black boxes: anything drawn on top of the planet (stars, the rocket,
+            the text) has the planet's color behind it instead of the terminal's
+            background color
         -   Text: "Get ready..." and the countdown number at the top, the zoom tip
             and "Esc: quit" at the bottom, so they never cover the rocket
         -   Terminals with fewer colors use the closest ones (orange becomes
