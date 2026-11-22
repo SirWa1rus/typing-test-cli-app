@@ -445,3 +445,94 @@ class CenteredPositionsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ButtonHighlightTests(unittest.TestCase):
+    """R5.1: a white box behind the selectable button the user is on.
+
+    The drawing (the white color) is in main.py; these tests check the layout
+    math in logic.py: which button is marked as selected, and where each
+    button and its box go.
+    """
+
+    MENU = ["Standard typing test", "Custom typing test"]
+    ROW = ["Retry", "Menu", "Quit"]
+
+    def test_R5_1_labels_padded_to_same_width(self):
+        labels = logic.button_labels(self.MENU)
+        widths = {len(label) for label in labels}
+        self.assertEqual(widths, {len("Standard typing test") + 2})
+
+    def test_R5_1_label_has_one_space_before_text(self):
+        for label, option in zip(logic.button_labels(self.ROW), self.ROW):
+            self.assertTrue(label.startswith(" " + option))
+
+    def test_R5_1_vertical_exactly_the_hovered_button_selected(self):
+        for hovered in range(len(self.MENU)):
+            buttons = logic.vertical_menu_buttons(self.MENU, hovered, 80, 24)
+            self.assertEqual([b.selected for b in buttons],
+                             [i == hovered for i in range(len(self.MENU))])
+
+    def test_R5_1_vertical_box_keeps_size_and_column(self):
+        buttons = logic.vertical_menu_buttons(self.MENU, 0, 80, 24)
+        self.assertEqual(len({b.col for b in buttons}), 1)
+        self.assertEqual(len({len(b.text) for b in buttons}), 1)
+
+    def test_R5_1_vertical_buttons_on_consecutive_rows_below_middle(self):
+        options = ["Easy", "Medium", "Hard"]
+        buttons = logic.vertical_menu_buttons(options, 0, 80, 24)
+        self.assertEqual([b.row for b in buttons], [11, 12, 13])
+
+    def test_R5_1_vertical_buttons_centered(self):
+        b = logic.vertical_menu_buttons(self.MENU, 0, 80, 24)[0]
+        left_space = b.col
+        right_space = 80 - (b.col + len(b.text))
+        self.assertLessEqual(abs(left_space - right_space), 1)
+
+    def test_R5_1_vertical_text_shows_the_option(self):
+        buttons = logic.vertical_menu_buttons(self.MENU, 0, 80, 24)
+        for b, option in zip(buttons, self.MENU):
+            self.assertIn(option, b.text)
+
+    def test_R5_1_row_exactly_the_hovered_button_selected(self):
+        for hovered in range(len(self.ROW)):
+            buttons = logic.button_row(self.ROW, hovered, 80, 12)
+            self.assertEqual([b.selected for b in buttons],
+                             [i == hovered for i in range(len(self.ROW))])
+
+    def test_R5_1_row_has_no_brackets(self):
+        for b in logic.button_row(self.ROW, 1, 80, 12):
+            self.assertNotIn("[", b.text)
+            self.assertNotIn("]", b.text)
+
+    def test_R5_1_row_buttons_same_width_left_to_right_with_gap(self):
+        buttons = logic.button_row(self.ROW, 0, 80, 12)
+        self.assertEqual(len({len(b.text) for b in buttons}), 1)
+        for left, right in zip(buttons, buttons[1:]):
+            self.assertEqual(right.col - (left.col + len(left.text)), logic.BUTTON_GAP)
+        self.assertEqual({b.row for b in buttons}, {12})
+
+    def test_R5_1_row_layout_does_not_move_when_hover_moves(self):
+        cols = [[b.col for b in logic.button_row(self.ROW, s, 80, 12)] for s in range(3)]
+        self.assertEqual(cols[0], cols[1])
+        self.assertEqual(cols[1], cols[2])
+
+    def test_R5_1_row_centered(self):
+        buttons = logic.button_row(self.ROW, 0, 80, 12)
+        left_space = buttons[0].col
+        right_space = 80 - (buttons[-1].col + len(buttons[-1].text))
+        self.assertLessEqual(abs(left_space - right_space), 1)
+
+    def test_R5_1_narrow_screen_never_negative_column(self):
+        for b in logic.vertical_menu_buttons(self.MENU, 0, 5, 24):
+            self.assertGreaterEqual(b.col, 0)
+        for b in logic.button_row(self.ROW, 0, 5, 12):
+            self.assertGreaterEqual(b.col, 0)
+
+    def test_R5_1_move_selection_steps_by_one(self):
+        self.assertEqual(logic.move_selection(0, 1, 3), 1)
+        self.assertEqual(logic.move_selection(2, -1, 3), 1)
+
+    def test_R5_1_move_selection_stops_at_ends(self):
+        self.assertEqual(logic.move_selection(0, -1, 3), 0)
+        self.assertEqual(logic.move_selection(2, 1, 3), 2)
